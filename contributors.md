@@ -1,6 +1,6 @@
 Group Members:
 
-Ash Elsaadi
-Hung K Liu
-Billy K Ngo
+Ash Elsaadi, 
+Hung K Liu, 
+Billy K Ngo, 
 Egemen Erkin Senvardarli
