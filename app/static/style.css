@@ -1,30 +1,321 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    padding: 20px;
+/* Improved Navigation Bar (Fixed & Styled) */
+.banner {
+    background: #111e82;
+    padding: 15px 0;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    z-index: 1000; /* Ensure navbar is always on top */
 }
-h2 {
-    color: blue;
+
+/* Navbar Links as Buttons */
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 20px;
 }
-form {
+
+nav ul li {
+    display: inline;
+}
+
+nav ul li a {
+    background: white;
+    color: #007BFF;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: 0.3s ease-in-out;
+    border: 2px solid white;
+}
+
+/* Hover Effect */
+nav ul li a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid white;
+}
+
+/* Center the welcome text */
+.container {
+    margin-top: 140px; /* Adjust for fixed navbar */
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    width: 45%;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+    font-family: 'Arial', sans-serif;
+}
+
+/* Center Login Container */
+.login-container {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    width: 40%;
+    text-align: left;
+    position: fixed; /* Keeps it centered */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+/* Center Register Container */
+.register-container {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    width: 40%;
+    text-align: left;
+    position: fixed;
+    top: 55%; /* Slightly lower than login */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+/* Login & Register Form Styles */
+.login-container form, .register-container form {
     display: flex;
     flex-direction: column;
-    width: 300px;
 }
-button {
-    background-color: blue;
-    color: white;
+
+/* Input Fields */
+.login-container label, .register-container label {
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.login-container input, .register-container input {
+    width: 100%;
     padding: 10px;
-    border: none;
-    cursor: pointer;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
 }
-table {
+
+/* Create Account Button */
+.create-account {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.create-account-btn {
+    color: #007BFF;
+    font-weight: bold;
+    text-decoration: none;
+    transition: 0.3s ease-in-out;
+}
+
+.create-account-btn:hover {
+    text-decoration: underline;
+}
+
+/* Register Button */
+.register-btn {
+    margin-top: 20px;
+    padding: 10px;
+    background: #007BFF;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+
+.register-btn:hover {
+    background: #0056b3;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 80%;
+        padding: 20px;
+    }
+
+    .login-container, .register-container {
+        width: 80%;
+        padding: 30px;
+        top: 55%; /* Lowered for mobile screens */
+    }
+
+    nav ul {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    nav ul li a {
+        width: 100px;
+        text-align: center;
+    }
+}
+/* Home Page Container (ONLY for home page) */
+/* Home Page Container */
+.home-container {
+    margin-top: 140px; /* Adjust for navbar */
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    width: 50%;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+    font-family: 'Arial', sans-serif;
+}
+
+
+/* Remove unintended styling from the home page */
+.container {
+    all: unset; /* Resets inherited styles */
+}
+
+/* About Page Styling */
+.about-container {
+    margin-top: 140px; /* Adjust for navbar */
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    width: 50%;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+    font-family: 'Arial', sans-serif;
+}
+
+/* Contact Page Styling */
+.contact-container {
+    margin-top: 140px; /* Adjust for navbar */
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    width: 50%;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+    font-family: 'Arial', sans-serif;
+}
+/* Login Button Styling */
+.login-btn-container {
+    margin-top: 15px;
+    text-align: left;  /* Aligns button to the left */
+}
+
+.login-btn {
+    padding: 10px 20px;
+    background: #007BFF;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+
+.login-btn:hover {
+    background: #0056b3;
+}
+
+/* Flash Messages */
+.flash-messages {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    text-align: center;
+    z-index: 1000;
+}
+
+.flash-message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Flash Message Types */
+.flash-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flash-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+/* Dashboard Container */
+.dashboard-container {
+    margin-top: 140px; /* Adjust for navbar */
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    width: 60%;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+    font-family: 'Arial', sans-serif;
+}
+
+/* User Table */
+.user-table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 20px;
 }
-th, td {
+
+.user-table th, .user-table td {
     padding: 10px;
-    border: 1px solid black;
+    border: 1px solid #ddd;
     text-align: left;
 }
 
+.user-table th {
+    background: #007BFF;
+    color: white;
+}
+
+.user-table tr:nth-child(even) {
+    background: #f2f2f2;
+}
+/* Logout Button */
+.logout-btn {
+    background: #dc3545; /* Red logout button */
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s ease-in-out;
+    border: 2px solid white;
+}
+
+.logout-btn:hover {
+    background: #c82333;
+    border: 2px solid white;
+}
