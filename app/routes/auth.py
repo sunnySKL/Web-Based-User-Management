@@ -16,10 +16,10 @@ SCOPE = ["User.Read"]
 @auth.route("/login")
 def microsoft_login():
     if "user" in session:
-        print("[DEBUG] User already in session, redirecting to dashboard...")
+        #print("[DEBUG] User already in session, redirecting to dashboard...")
         return redirect(url_for("admin.dashboard"))  # Prevents re-login loop
 
-    print("[DEBUG] Redirecting user to Microsoft login...")
+    #print("[DEBUG] Redirecting user to Microsoft login...")
     login_url = (
         f"{AUTHORITY}?client_id={CLIENT_ID}"
         f"&response_type=code&redirect_uri={REDIRECT_URI}"
