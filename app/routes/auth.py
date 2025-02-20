@@ -66,13 +66,15 @@ def microsoft_callback():
     session["user"] = user_info.get("displayName", "Unknown User")
     session["email"] = user_info.get("mail", "No Email Provided")
 
+    curr_admins = ["hkliu@cougarnet.uh.edu", "eeenvar@cougarnet.uh.edu"] 
     #  Assign admin role if email matches yours
-    if session["email"].lower() == "hkliu@cougarnet.uh.edu":
+    flash(f"Welcome, {session['user']}!", "success")
+    if session["email"].lower() in curr_admins:
         session["role"] = "Admin"
     else:
         session["role"] = "User"
 
-    flash(f"Welcome, {session['user']}!", "success")
+    #flash(f"Welcome, {session['user']}!", "success")
     return redirect(url_for('admin.dashboard'))
 
 @auth.route('/logout')
