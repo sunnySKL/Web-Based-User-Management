@@ -67,16 +67,25 @@ def microsoft_callback():
 
     session["user"] = user_info.get("displayName", "Unknown User")
     session["email"] = user_info.get("mail", "No Email Provided")
+    session["exists"] = True
+    session["active"] = True
 
     #curr_admins = ["hkliu@cougarnet.uh.edu", "eesenvar@cougarnet.uh.edu"] 
     #  Assign admin role if email matches yours
-    flash(f"Welcome, {session['user']}!", "success")
 
     user = User.query.filter_by(email=session["email"].lower()).first()
 
     if user is None:
-        flash("Login failed. account doesn't exist in the system", "error")
+        flash("Account doesn't exist in the system. Please logout and login with a valid account or contact support", "error")
+        session["exists"] = False
         return redirect(url_for('main.home'))
+
+    if user.status.lower() != "active":
+        flash("Account isn't active. Please logout and login with a valid account or contact support", "error")
+        session["active"] = False
+        return redirect(url_for("main.home"))
+
+    flash(f"Welcome, {session['user']}!", "success")
 
     #if session["email"].lower() in curr_admins:
     if user.role.lower() == "admin":

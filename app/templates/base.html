@@ -29,11 +29,13 @@
                 <li><a href="{{ url_for('main.about') }}">About</a></li>
                 <li><a href="{{ url_for('main.contact') }}">Contact</a></li>
                 {% if 'user' in session %}
-                    {% if session.get('role') == 'Admin' %}
-                        <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
-					{% else %}
-                        <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
-                    {% endif %}
+					{% if session['exists'] is true and session['active'] is true%}
+                    	{% if session.get('role') == 'Admin' %}
+                        	<li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+						{% else %}
+                        	<li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    	{% endif %}
+					{% endif %}
                     
                     <li class="user-info">
                         {{ session['user'] }} ({{ session['email'] }})
