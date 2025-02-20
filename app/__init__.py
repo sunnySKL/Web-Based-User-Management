@@ -3,6 +3,9 @@ from flask import Flask
 from config import dev_config
 from .extensions.db import db
 from flask_migrate import Migrate
+from dotenv import load_dotenv
+
+load_dotenv()
 
 #TODO: Change the servername later on
 #Add the config loads

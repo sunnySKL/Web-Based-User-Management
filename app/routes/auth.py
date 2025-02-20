@@ -16,7 +16,7 @@ SCOPE = ["User.Read"]
 @auth.route("/login")
 def microsoft_login():
     if "user" in session:
-        #print("[DEBUG] User already in session, redirecting to dashboard...")
+        print("[DEBUG] User already in session, redirecting to dashboard...")
         return redirect(url_for("admin.dashboard"))  # Prevents re-login loop
 
     #print("[DEBUG] Redirecting user to Microsoft login...")
@@ -80,6 +80,8 @@ def microsoft_callback():
 @auth.route('/logout')
 def logout():
     session.clear()
+    ms_logout_url = "https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=" + url_for('main.home', _external=True)
+    redirect
     print("[DEBUG] User session cleared")
     flash("You have been logged out.", "success")
-    return redirect(url_for('main.home'))
+    return redirect(ms_logout_url)
