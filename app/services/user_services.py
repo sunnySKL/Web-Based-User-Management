@@ -11,11 +11,7 @@ def create_user(display_name, email, role="User", status="active"):
     db.session.commit()
     return user
 
-def update_user(user, data):
-    user.display_name = data.get("display_name", user.display_name)
-    user.email = data.get("email", user.email)
-    user.role = data.get("role", user.role)
-    user.status = data.get("status", user.status)
+def update_user(user):
     db.session.commit()
     return user
 

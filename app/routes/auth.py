@@ -71,11 +71,13 @@ def microsoft_callback():
     flash(f"Welcome, {session['user']}!", "success")
     if session["email"].lower() in curr_admins:
         session["role"] = "Admin"
+        return redirect(url_for('admin.dashboard'))
     else:
         session["role"] = "User"
+        return redirect(url_for('main.dashboard'))
 
     #flash(f"Welcome, {session['user']}!", "success")
-    return redirect(url_for('admin.dashboard'))
+    #return redirect(url_for('admin.dashboard'))
 
 @auth.route('/logout')
 def logout():

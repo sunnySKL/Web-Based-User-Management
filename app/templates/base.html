@@ -32,6 +32,8 @@
                 {% if 'user' in session %}
                     {% if session.get('role') == 'Admin' %}
                         <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+					{% else %}
+                        <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
                     {% endif %}
                     
                     <li class="user-info">

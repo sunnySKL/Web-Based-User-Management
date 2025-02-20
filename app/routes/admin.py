@@ -28,10 +28,32 @@ def dashboard():
     return render_template("admin.html", user=session["user"], email=session["email"], role=session["role"], users=users)
 
 
-@admin.route("/admin/update_user")
+@admin.route("/admin/update_user/<int:user_id>", methods = ["GET", "POST"])
 @admin_required
-def update_user():
-    pass
+def update_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if request.method == 'POST':
+        # Retrieve form data. Only update if a value is provided.
+        new_display_name = request.form.get('display_name')
+        new_email = request.form.get('email')
+        new_role = request.form.get('role')
+        new_status = request.form.get('status')
+
+        if new_display_name:
+            user.display_name = new_display_name
+        if new_email:
+            user.email = new_email
+        if new_role:
+            user.role = new_role
+        if new_status:
+            user.status = new_status
+
+        user_service.update_user(user)
+        return redirect(url_for('admin.dashboard'))
+    # If GET, render the update form with current user data pre-filled
+    return render_template('admin_update.html', user=user)
+        
+
 
 @admin.route("/admin/delete_user/<int:user_id>", methods = ["POST"])
 @admin_required

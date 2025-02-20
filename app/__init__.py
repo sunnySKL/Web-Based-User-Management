@@ -30,7 +30,7 @@ def create_app(config_class = dev_config):
     from app.routes.auth import auth
     from app.routes.admin import admin
     app.register_blueprint(main)
-    app.register_blueprint(auth)
     app.register_blueprint(admin)
+    app.register_blueprint(auth)
 
     return app
