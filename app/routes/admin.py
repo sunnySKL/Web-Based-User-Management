@@ -3,7 +3,7 @@ import app.services.user_services as user_service
 
 admin = Blueprint("admin", __name__)
 
-@admin.route("/dashboard")
+@admin.route("/admin/dashboard")
 def dashboard():
     if "user" not in session:
         flash("Please log in to access the dashboard", "error")
@@ -21,3 +21,17 @@ def dashboard():
     ]
 
     return render_template("admin.html", user=session["user"], email=session["email"], role=session["role"], users=users)
+
+
+@admin.route("/admin/update_user")
+def update_user():
+    pass
+
+@admin.route("/admin/delete_user")
+def delete_user():
+    pass
+
+@admin.route("/admin/create_user")
+def create_user():
+    pass
+

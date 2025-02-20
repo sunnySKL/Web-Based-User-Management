@@ -3,25 +3,62 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <h2>Admin Dashboard</h2>
-    <p>Manage users and roles below.</p>
+	<h2>Welcome, {{ session['user'] }}!</h2>
+	<p><strong>Email:</strong> {{ session['email'] }}</p>
+	<p><strong>Role:</strong> {{ session['role'] }}</p>
 
-    <table class="user-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="user-list">
-            <!-- Users will be dynamically inserted here -->
-        </tbody>
-    </table>
+	<h2>Admin Dashboard</h2>
+	<p>Manage users and roles below.</p>
+
+	<!-- Add User Button -->
+	<button id="toggle-add-user" class="btn btn-success">Add User</button>
+
+	<!-- Hidden Add User Form -->
+	<div id="add-user-form" style="display: none; margin-top: 20px;">
+		<h3>Add New User</h3>
+		<form action="{{ url_for('admin.create_user') }}" method="POST">
+			<div>
+				<label for="display_name">Name:</label>
+				<input type="text" id="display_name" name="display_name" required>
+			</div>
+			<div>
+				<label for="email">Email:</label>
+				<input type="email" id="email" name="email" required>
+			</div>
+			<div>
+				<label for="role">Role:</label>
+				<select id="role" name="role" required>
+					<option value="User">User</option>
+					<option value="Admin">Admin</option>
+				</select>
+			</div>
+			<div>
+				<label for="status">Status:</label>
+				<select id="status" name="status" required>
+					<option value="active">Active</option>
+					<option value="inactive">Inactive</option>
+				</select>
+			</div>
+			<button type="submit" class="btn btn-primary">Submit</button>
+		</form>
+	</div>
+
+	<table class="user-table">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Email</th>
+				<th>Role</th>
+				<th>Status</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody id="user-list">
+			<!-- Users will be dynamically inserted here -->
+		</tbody>
+	</table>
 </div>
 
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="{{ url_for('static', filename='admin.js') }}"></script>
 {% endblock %}

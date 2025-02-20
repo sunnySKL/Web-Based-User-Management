@@ -66,7 +66,7 @@ def microsoft_callback():
     session["user"] = user_info.get("displayName", "Unknown User")
     session["email"] = user_info.get("mail", "No Email Provided")
 
-    curr_admins = ["hkliu@cougarnet.uh.edu", "eeenvar@cougarnet.uh.edu"] 
+    curr_admins = ["hkliu@cougarnet.uh.edu", "eesenvar@cougarnet.uh.edu"] 
     #  Assign admin role if email matches yours
     flash(f"Welcome, {session['user']}!", "success")
     if session["email"].lower() in curr_admins:
