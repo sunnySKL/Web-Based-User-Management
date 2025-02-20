@@ -74,6 +74,10 @@ def microsoft_callback():
 
     user = User.query.filter_by(email=session["email"].lower()).first()
 
+    if user is None:
+        flash("Login failed. account doesn't exist in the system", "error")
+        return redirect(url_for('main.home'))
+
     #if session["email"].lower() in curr_admins:
     if user.role.lower() == "admin":
         session["role"] = "Admin"
