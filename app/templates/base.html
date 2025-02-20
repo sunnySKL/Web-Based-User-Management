@@ -28,7 +28,6 @@
                 <li><a href="{{ url_for('main.home') }}">Home</a></li>
                 <li><a href="{{ url_for('main.about') }}">About</a></li>
                 <li><a href="{{ url_for('main.contact') }}">Contact</a></li>
-
                 {% if 'user' in session %}
                     {% if session.get('role') == 'Admin' %}
                         <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
