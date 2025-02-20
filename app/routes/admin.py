@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
 import app.services.user_services as user_service
 from app.models import User
-from app.decorators import admin_required
+from app.decorators import admin_required, active_required
 
 admin = Blueprint("admin", __name__)
 
 @admin.route("/admin/dashboard")
 @admin_required
+@active_required
 def dashboard():
     if "user" not in session:
         flash("Please log in to access the dashboard", "error")
@@ -30,6 +31,7 @@ def dashboard():
 
 @admin.route("/admin/update_user/<int:user_id>", methods = ["GET", "POST"])
 @admin_required
+@active_required
 def update_user(user_id):
     user = User.query.get_or_404(user_id)
     if request.method == 'POST':
@@ -53,10 +55,9 @@ def update_user(user_id):
     # If GET, render the update form with current user data pre-filled
     return render_template('admin_update.html', user=user)
         
-
-
 @admin.route("/admin/delete_user/<int:user_id>", methods = ["POST"])
 @admin_required
+@active_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     user_service.delete_user(user)
@@ -65,6 +66,7 @@ def delete_user(user_id):
 
 @admin.route("/admin/create_user", methods = ["POST"])
 @admin_required
+@active_required
 def create_user():
     # Get data from the form submission
     display_name = request.form.get('display_name')

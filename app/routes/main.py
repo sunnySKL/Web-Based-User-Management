@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template
+from app.decorators import active_required
 
 main = Blueprint("main", __name__)
 
@@ -14,5 +15,6 @@ def contact():
     return render_template("contact.html")
 
 @main.route('/dashboard')
+@active_required
 def dashboard():
     return render_template("dashboard.html")
