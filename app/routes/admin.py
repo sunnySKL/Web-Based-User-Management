@@ -15,10 +15,12 @@ def dashboard():
         return redirect(url_for("main.home"))
 
     # Temporary Hardcoded Users (Replace with Database Query Later)
-    users = [
-        {"id": 1, "name": "Alice", "email": "alice@example.com", "role": "User", "status": "Active"},
-        {"id": 2, "name": "Bob", "email": "bob@example.com", "role": "Admin", "status": "Active"},
-    ]
+    #users = [
+    #    {"id": 1, "name": "Alice", "email": "alice@example.com", "role": "User", "status": "Active"},
+    #    {"id": 2, "name": "Bob", "email": "bob@example.com", "role": "Admin", "status": "Active"},
+    #]
+
+    users = user_service.get_all_users()
 
     return render_template("admin.html", user=session["user"], email=session["email"], role=session["role"], users=users)
 

@@ -2,11 +2,12 @@ document.addEventListener("DOMContentLoaded", function() {
   fetchUsers(); // Load users when page loads
 });
 
+/*
 function fetchUsers() {
   // MOCK DATA - Replace this with an actual API call later
   const users = [
-      { id: 1, name: "Alice", email: "alice@example.com", role: "User", status: "Active" },
-      { id: 2, name: "Bob", email: "bob@example.com", role: "Admin", status: "Active" }
+      //{ id: 1, name: "Alice", email: "alice@example.com", role: "User", status: "Active" },
+      //{ id: 2, name: "Bob", email: "bob@example.com", role: "Admin", status: "Active" }
   ];
 
   const userTable = document.getElementById("user-list");
@@ -35,7 +36,7 @@ function fetchUsers() {
       `;
       userTable.appendChild(row);
   });
-}
+} */
 
 document.addEventListener('DOMContentLoaded', function() {
     var toggleButton = document.getElementById('toggle-add-user');
