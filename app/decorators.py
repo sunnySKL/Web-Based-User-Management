@@ -17,13 +17,13 @@ def active_required(f):
         # Ensure the user is logged in (assuming their email is stored in the session)
         if "email" not in session:
             flash("Please log in to access this page.", "error")
-            return redirect(url_for("auth.microsoft_login"))
+            return redirect(url_for("main.home"))
 
         # Query the database for the user using their email
         user = User.query.filter_by(email=session["email"].lower()).first()
         if not user:
             flash("User not found. Please log in again.", "error")
-            return redirect(url_for("auth.microsoft_login"))
+            return redirect(url_for("main.home"))
 
         # Check if the user is active
         if user.status.lower() != "active":
