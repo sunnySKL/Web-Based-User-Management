@@ -8,7 +8,7 @@ auth = Blueprint('auth', __name__)
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 TENANT_ID = os.getenv("TENANT_ID")
-REDIRECT_URI = os.getenv("REDIRECT_URI")
+#REDIRECT_URI = os.getenv("REDIRECT_URI")
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/authorize"
 TOKEN_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
 SCOPE = ["User.Read"]
@@ -20,9 +20,11 @@ def microsoft_login():
         return redirect(url_for("admin.dashboard"))  # Prevents re-login loop
 
     #print("[DEBUG] Redirecting user to Microsoft login...")
+    redirect_uri = url_for('auth.microsoft_callback', _external=True)
+    print(f"Generated redirect uri: {redirect_uri}")
     login_url = (
         f"{AUTHORITY}?client_id={CLIENT_ID}"
-        f"&response_type=code&redirect_uri={REDIRECT_URI}"
+        f"&response_type=code&redirect_uri={redirect_uri}"
         f"&scope={' '.join(SCOPE)}"
     )
     return redirect(login_url)
@@ -36,13 +38,15 @@ def microsoft_callback():
         flash("Login failed. No authorization code received.", "error")
         return redirect(url_for('main.home'))
 
+    redirect_uri = url_for('auth.microsoft_callback', _external=True)
+
     # Exchange code for access token
     token_data = {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "scope": " ".join(SCOPE),
     }
     response = requests.post(TOKEN_URL, data=token_data)
