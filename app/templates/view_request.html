@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Request Details{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2>Request ID: {{ request.id }}</h2>
+    <p><strong>Student Email:</strong> {{ request.email }}</p>
+    <p><strong>Form Type:</strong> 
+        {% if request.form_type|string == "1" %}
+            Special Circumstance
+        {% elif request.form_type|string == "2" %}
+            Instructor-Initiated Drop
+        {% else %}
+            Unknown
+        {% endif %}
+    </p>
+    <p><strong>Status:</strong> {{ request.status.replace("_", " ").title() }}</p>
+    <p><strong>Submitted On:</strong> {{ request.created_at.strftime("%Y-%m-%d %H:%M") if request.created_at else "N/A" }}</p>
+    <hr>
+
+    <!-- Show the JSON-formatted data for now -->
+    <h3>Submitted Data:</h3>
+    <pre>{{ request.data | tojson(indent=2) }}</pre>
+
+    <a href="{{ url_for('admin.review_requests') }}" class="btn btn-secondary">Back</a>
+</div>
+{% endblock %}
