@@ -24,7 +24,7 @@ def create_app(config_class = dev_config):
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_default_secret_key')
     
     # Set server name to use localhost for redirect URIs
-    app.config['SERVER_NAME'] = 'localhost:8080'
+    app.config['SERVER_NAME'] = 'localhost:5000'
 
     # Import and register Blueprints
     from app.routes.main import main
