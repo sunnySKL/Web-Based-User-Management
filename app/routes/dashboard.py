@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for, flash, request
+from flask import Blueprint, render_template, session, redirect, url_for, flash, request, current_app, send_file
 from werkzeug.utils import secure_filename
 import os
 import app.services.academic_service as academic_service
@@ -6,6 +6,8 @@ from app.models import User, AcademicRequests
 from app.decorators import active_required
 from datetime import datetime
 from app import db
+import subprocess
+import shutil
 
 
 dashboard = Blueprint("dashboard", __name__)
@@ -266,4 +268,34 @@ def delete_form(request_id):
     return redirect(url_for("dashboard.user_dashboard"))
 
 
+@dashboard.route("/dashboard/view_pdf/<int:request_id>", methods=["GET"])
+@active_required
+def view_pdf(request_id):
+    draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
+    rendered_tex = render_template("special_circumstance.tex.j2", request_data=draft.data)
+
+    # Create a temporary directory to store the .tex and .pdf files
+    temp_dir = os.path.join(current_app.instance_path, "temp")
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    tex_file = os.path.join(temp_dir, "special_circumstance.tex")
+    pdf_file = os.path.join(temp_dir, "special_circumstance.pdf")
+    
+    # Write the rendered LaTeX to a file
+    with open(tex_file, "w") as f:
+        f.write(rendered_tex)
+    
+    # Compile the .tex file into a PDF using pdflatex.
+    try:
+        makefile_src = os.path.join(current_app.root_path, "latex", "Makefile")
+        makefile_dst = os.path.join(temp_dir, "Makefile")
+        shutil.copy(makefile_src, makefile_dst)
+        subprocess.run(["make", "-C", temp_dir, "all"], check=True)
+        subprocess.run(["make", "-C", temp_dir, "all"], check=True)
+    except subprocess.CalledProcessError as e:
+        flash("Error generating PDF.", "error")
+        return redirect(url_for("dashboard.user_dashboard"))
+    
+    # Return the generated PDF as a response.
+    return send_file(pdf_file, mimetype="application/pdf", as_attachment=False)
 

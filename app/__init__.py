@@ -25,6 +25,7 @@ def create_app(config_class = dev_config):
     
     # Set server name to use localhost for redirect URIs
     app.config['SERVER_NAME'] = 'localhost:5000'
+    app.config["APP_ROOT"] = os.path.dirname(os.path.abspath(__file__))
 
     # Import and register Blueprints
     from app.routes.main import main
