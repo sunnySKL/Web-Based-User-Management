@@ -1,11 +1,18 @@
-TEXFILE = special_circumstance.tex
-PDFFILE = special_circumstance.pdf
+# List all the .tex files to compile.
+TEXFILES = course_drop.tex special_circumstance.tex
 
-all: $(PDFFILE)
+# Automatically derive the PDF file names from the TEX files.
+PDFFILES = $(TEXFILES:.tex=.pdf)
 
-$(PDFFILE): $(TEXFILE)
-	pdflatex -output-directory $(dir $(TEXFILE)) $(TEXFILE)
-	pdflatex -output-directory $(dir $(TEXFILE)) $(TEXFILE)
+# The default target "all" depends on all the PDF files.
+all: $(PDFFILES)
 
+# Pattern rule: For any .tex file, run pdflatex twice to generate the corresponding .pdf.
+%.pdf: %.tex
+	pdflatex -interaction=nonstopmode -halt-on-error $<
+	pdflatex -interaction=nonstopmode -halt-on-error $<
+
+# Clean up generated files.
 clean:
-	rm -f $(PDFFILE) *.aux *.log *.out
+	rm -f $(PDFFILES) *.aux *.log *.out
+

@@ -93,6 +93,7 @@ def special_circumstance():
 @dashboard.route("/special_circumstance/edit/<int:request_id>", methods=["GET", "POST"])
 @active_required
 def special_circumstance_edit(request_id):
+    draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
     if request.method == "POST":
         draft["student_name"] = request.form.get("student_name")
         draft["student_id"] = request.form.get("student_id")
@@ -200,6 +201,7 @@ def course_drop():
 @dashboard.route("/course_drop/edit/<int:request_id>", methods=["GET", "POST"])
 @active_required
 def course_drop_edit(request_id):
+    draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
     if request.method == "POST":
         # Retrieve existing draft and update values
         draft["student_name"] = request.form.get("student_name")
@@ -272,14 +274,20 @@ def delete_form(request_id):
 @active_required
 def view_pdf(request_id):
     draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
-    rendered_tex = render_template("special_circumstance.tex.j2", request_data=draft.data)
-
-    # Create a temporary directory to store the .tex and .pdf files
     temp_dir = os.path.join(current_app.instance_path, "temp")
     os.makedirs(temp_dir, exist_ok=True)
+
+    if draft.form_type == 1: 
+        rendered_tex = render_template("special_circumstance.tex.j2", request_data=draft.data)
+        tex_file = os.path.join(temp_dir, "special_circumstance.tex")
+        pdf_file = os.path.join(temp_dir, "special_circumstance.pdf")
+    else:
+        rendered_tex = render_template("course_drop.tex.j2", request_data=draft.data)
+        tex_file = os.path.join(temp_dir, "course_drop.tex")
+        pdf_file = os.path.join(temp_dir, "course_drop.pdf")
+
+    # Create a temporary directory to store the .tex and .pdf files
     
-    tex_file = os.path.join(temp_dir, "special_circumstance.tex")
-    pdf_file = os.path.join(temp_dir, "special_circumstance.pdf")
     
     # Write the rendered LaTeX to a file
     with open(tex_file, "w") as f:
@@ -290,8 +298,13 @@ def view_pdf(request_id):
         makefile_src = os.path.join(current_app.root_path, "latex", "Makefile")
         makefile_dst = os.path.join(temp_dir, "Makefile")
         shutil.copy(makefile_src, makefile_dst)
-        subprocess.run(["make", "-C", temp_dir, "all"], check=True)
-        subprocess.run(["make", "-C", temp_dir, "all"], check=True)
+        subprocess.run(["make", "-C", temp_dir, "clean"], check=True)
+        if draft.form_type == 2:
+            subprocess.run(["make", "-C", temp_dir, "course_drop.pdf"], check=True)
+            subprocess.run(["make", "-C", temp_dir, "course_drop.pdf"], check=True)
+        else:
+            subprocess.run(["make", "-C", temp_dir, "special_circumstance.pdf"], check=True)
+            subprocess.run(["make", "-C", temp_dir, "special_circumstance.pdf"], check=True)
     except subprocess.CalledProcessError as e:
         flash("Error generating PDF.", "error")
         return redirect(url_for("dashboard.user_dashboard"))
