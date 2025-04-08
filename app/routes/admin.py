@@ -62,7 +62,7 @@ def update_user(user_id):
         return redirect(url_for('admin.admin_dashboard'))
     # If GET, render the update form with current user data pre-filled
     return render_template('admin_update.html', user=user)
-        
+
 @admin.route("/admin/delete_user/<int:user_id>", methods = ["POST"])
 @admin_required
 @active_required
@@ -109,9 +109,25 @@ def review_requests():
 @admin_required
 def view_request(request_id):
     req = AcademicRequests.query.get_or_404(request_id)
-    
+
     # Ensure .data is a dict
     try:
+        if "signature" in req.data and req.data["signature"]:
+            signature_image_filename = "signature.png"  # or .jpg, as appropriate
+            signature_image_path = os.path.join(temp_dir, signature_image_filename)
+            try:
+                # Decode the Base64 string into binary data
+                signature_binary = base64.b64decode(req.data["signature"])
+                with open(signature_image_path, "wb") as img_file:
+                    img_file.write(signature_binary)
+                # Include the file name in our data so that LaTeX can refer to it.
+                req.data["signature_image_filename"] = signature_image_filename
+            except Exception as e:
+                current_app.logger.error(f"Error decoding signature image: {e}")
+                req.data["signature_image_filename"] = None
+        else:
+              req.data["signature_image_filename"] = None
+
         form_data_parsed = req.data
     except json.JSONDecodeError:
         form_data_parsed = {}
@@ -154,12 +170,12 @@ def view_pdf(request_id):
         pdf_file = os.path.join(temp_dir, "course_drop.pdf")
 
     # Create a temporary directory to store the .tex and .pdf files
-    
-    
+
+
     # Write the rendered LaTeX to a file
     with open(tex_file, "w") as f:
         f.write(rendered_tex)
-    
+
     # Compile the .tex file into a PDF using pdflatex.
     try:
         makefile_src = os.path.join(current_app.root_path, "latex", "Makefile")
@@ -175,7 +191,7 @@ def view_pdf(request_id):
     except subprocess.CalledProcessError as e:
         flash("Error generating PDF.", "error")
         return redirect(url_for("dashboard.user_dashboard"))
-    
+
     # Return the generated PDF as a response.
     return send_file(pdf_file, mimetype="application/pdf", as_attachment=False)
 

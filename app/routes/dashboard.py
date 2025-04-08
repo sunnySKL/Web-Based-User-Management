@@ -8,6 +8,8 @@ from datetime import datetime
 from app import db
 import subprocess
 import shutil
+import base64
+from io import BytesIO
 
 
 dashboard = Blueprint("dashboard", __name__)
@@ -63,6 +65,11 @@ def special_circumstance():
             upload_path = os.path.join(upload_folder, signature_filename)
             signature_file.save(upload_path)
 
+            # Read binary data
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+
         request_data = {
             "student_name": student_name,
             "student_id": student_id,
@@ -72,8 +79,10 @@ def special_circumstance():
             "other_option_detail": other_option_detail,
             "justification": justification,
             "date": date,
-            "signature": signature_filename  # store file name
+            "signature": signature_base64  # store file name
         }
+        print(signature_base64)
+        print(request_data["signature"])
 
         # Determine whether to save as draft or submit
         action = request.form.get("action")
@@ -111,7 +120,12 @@ def special_circumstance_edit(request_id):
             upload_folder = os.path.join("app", "static", "uploads")
             os.makedirs(upload_folder, exist_ok=True)
             signature_file.save(os.path.join(upload_folder, signature_filename))
-            draft["signature_filename"] = signature_filename
+            
+            # Read binary data
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+            draft["signature"] = signature_base64
 
         academic_service.update_form(id, draft)
         flash("Form updated succesfully.", "success")
@@ -138,7 +152,11 @@ def special_circumstance_edit_dashboard(request_id):
             upload_folder = os.path.join("app", "static", "uploads")
             os.makedirs(upload_folder, exist_ok=True)
             signature_file.save(os.path.join(upload_folder, signature_filename))
-            draft["signature_filename"] = signature_filename
+            # Read binary data
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+            draft["signature"] = signature_base64
 
         academic_service.update_form(id, draft)
         flash("Form updated succesfully.", "success")
@@ -171,6 +189,10 @@ def course_drop():
             os.makedirs(upload_folder, exist_ok=True)
             upload_path = os.path.join(upload_folder, signature_filename)
             signature_file.save(upload_path)
+            # Read binary data
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
 
         # Prepare request data for storage
         request_data = {
@@ -182,7 +204,7 @@ def course_drop():
             "catalog_number": catalog_number,
             "class_number": class_number,
             "date": date,
-            "signature": signature_filename,  # Store uploaded signature filename
+            "signature": signature_base64,  # Store uploaded signature filename
         }
 
         # Determine if it's a draft or submitted form
@@ -220,7 +242,12 @@ def course_drop_edit(request_id):
             upload_folder = os.path.join("app", "static", "uploads")
             os.makedirs(upload_folder, exist_ok=True)
             signature_file.save(os.path.join(upload_folder, signature_filename))
-            draft["signature_filename"] = signature_filename
+
+            # Read binary data
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+            draft["signature"] = signature_base64
 
         academic_service.update_form(request_id, draft)
         flash("Form updated successfully.", "success")
@@ -247,7 +274,11 @@ def course_drop_edit_dashboard(request_id):
             upload_folder = os.path.join("app", "static", "uploads")
             os.makedirs(upload_folder, exist_ok=True)
             signature_file.save(os.path.join(upload_folder, signature_filename))
-            draft["signature_filename"] = signature_filename
+            # Read binary data
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+            draft["signature"] = signature_base64
 
         academic_service.update_form(request_id, draft)
         flash("Form updated successfully.", "success")
@@ -274,15 +305,39 @@ def delete_form(request_id):
 @active_required
 def view_pdf(request_id):
     draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
+    request_data = draft.data.copy()
     temp_dir = os.path.join(current_app.instance_path, "temp")
     os.makedirs(temp_dir, exist_ok=True)
 
+    print(request_data.keys())
+    print(request_data["signature"])
+
+    if "signature" in request_data and request_data["signature"]:
+        signature_image_filename = "signature.png"  # or .jpg, as appropriate
+        signature_image_path = os.path.join(temp_dir, signature_image_filename)
+        print()
+        print("dkibidi")
+        print()
+        try:
+            # Decode the Base64 string into binary data
+            signature_binary = base64.b64decode(request_data["signature"])
+            with open(signature_image_path, "wb") as img_file:
+                img_file.write(signature_binary)
+            # Include the file name in our data so that LaTeX can refer to it.
+            request_data["signature_image_filename"] = signature_image_filename
+        except Exception as e:
+            current_app.logger.error(f"Error decoding signature image: {e}")
+            request_data["signature_image_filename"] = None
+    else:
+        request_data["signature_image_filename"] = None
+
+
     if draft.form_type == 1: 
-        rendered_tex = render_template("special_circumstance.tex.j2", request_data=draft.data)
+        rendered_tex = render_template("special_circumstance.tex.j2", request_data=request_data)
         tex_file = os.path.join(temp_dir, "special_circumstance.tex")
         pdf_file = os.path.join(temp_dir, "special_circumstance.pdf")
     else:
-        rendered_tex = render_template("course_drop.tex.j2", request_data=draft.data)
+        rendered_tex = render_template("course_drop.tex.j2", request_data=request_data)
         tex_file = os.path.join(temp_dir, "course_drop.tex")
         pdf_file = os.path.join(temp_dir, "course_drop.pdf")
 
@@ -292,6 +347,7 @@ def view_pdf(request_id):
     # Write the rendered LaTeX to a file
     with open(tex_file, "w") as f:
         f.write(rendered_tex)
+    
     
     # Compile the .tex file into a PDF using pdflatex.
     try:
