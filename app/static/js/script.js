@@ -263,6 +263,6 @@ function showNotification(message, type = 'info') {
         setTimeout(() => {
             notification.remove();
         }, 150);
-    }, 5000);
+    }, 7070);
 }
 
