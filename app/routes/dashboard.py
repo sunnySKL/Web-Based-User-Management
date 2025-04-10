@@ -133,35 +133,6 @@ def special_circumstance_edit(request_id):
     return render_template("special_circumstance.html")
 
 
-@dashboard.route("/dashboard/special_circumstance/edit/<int:request_id>", methods=["GET", "POST"])
-@active_required
-def special_circumstance_edit_dashboard(request_id):
-    if request.method == "POST":
-        draft["student_name"] = request.form.get("student_name")
-        draft["student_id"] = request.form.get("student_id")
-        draft["course_subject"] = request.form.get("course_subject")
-        draft["course_number"] = request.form.get("course_number")
-        draft["semester"] = request.form.get("semester")
-        draft["year"] = request.form.get("year")
-
-        # Process new signature file upload if provided
-        signature_file = request.files.get("signature")
-        if signature_file:
-            from werkzeug.utils import secure_filename
-            signature_filename = secure_filename(signature_file.filename)
-            upload_folder = os.path.join("app", "static", "uploads")
-            os.makedirs(upload_folder, exist_ok=True)
-            signature_file.save(os.path.join(upload_folder, signature_filename))
-            # Read binary data
-            binary_data = signature_file.read()
-            # Convert binary data to base64 encoded string
-            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
-            draft["signature"] = signature_base64
-
-        academic_service.update_form(id, draft)
-        flash("Form updated succesfully.", "success")
-
-    return render_template("special_circumstance.html")
 
 
 #TODO: Change the endpoints
@@ -243,37 +214,6 @@ def course_drop_edit(request_id):
             os.makedirs(upload_folder, exist_ok=True)
             signature_file.save(os.path.join(upload_folder, signature_filename))
 
-            # Read binary data
-            binary_data = signature_file.read()
-            # Convert binary data to base64 encoded string
-            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
-            draft["signature"] = signature_base64
-
-        academic_service.update_form(request_id, draft)
-        flash("Form updated successfully.", "success")
-
-    return render_template("course_drop.html")
-
-@dashboard.route("/dashboard/course_drop/edit/<int:request_id>", methods=["GET", "POST"])
-@active_required
-def course_drop_edit_dashboard(request_id):
-    if request.method == "POST":
-        draft["student_name"] = request.form.get("student_name")
-        draft["student_id"] = request.form["student_id"]
-        draft["semester"] = request.form["semester"]
-        draft["year"] = request.form["year"]
-        draft["subject"] = request.form["subject"]
-        draft["catalog_number"] = request.form["catalog_number"]
-        draft["class_number"] = request.form["class_number"]
-
-        # Handle Signature Upload
-        signature_file = request.files.get("signature")
-        if signature_file:
-            from werkzeug.utils import secure_filename
-            signature_filename = secure_filename(signature_file.filename)
-            upload_folder = os.path.join("app", "static", "uploads")
-            os.makedirs(upload_folder, exist_ok=True)
-            signature_file.save(os.path.join(upload_folder, signature_filename))
             # Read binary data
             binary_data = signature_file.read()
             # Convert binary data to base64 encoded string

@@ -9,7 +9,7 @@
 </head>
 <body>
 
-    <!-- Navigation Banner -->
+    <!-- navigation banner -->
     <div class="banner">
         <nav>
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -27,8 +27,7 @@
 
             <ul>
                 <li><a href="{{ url_for('main.home') }}">Home</a></li>
-                <li><a href="{{ url_for('main.about') }}">About</a></li>
-                <li><a href="{{ url_for('main.contact') }}">Contact</a></li>
+                
                 {% if 'user' in session %}
 					{% if session['exists'] is true and session['active'] is true%}
                     	{% if session.get('role') == 'Admin' %}

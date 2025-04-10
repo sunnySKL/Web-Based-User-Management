@@ -9,7 +9,7 @@ def get_all_forms():
 def submit_form(data, form_type, status):
     new_request = AcademicRequests(
         email=session.get("email"),
-        form_type=form_type,  #
+        form_type=form_type,  
         data=data,
         status=status
     )
