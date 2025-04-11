@@ -21,8 +21,8 @@
 \end{tabular}
 
 \section*{Signature}
-{% if request_data.signature_filename %}
-\includegraphics[width=0.5\textwidth]{uploads/{ request_data.signature_image_filename}}
+{% if request_data.signature_image_filename %}
+\includegraphics[width=0.5\textwidth]{ {{ request_data.signature_image_filename }} }
 {% else %}
 No signature provided.
 {% endif %}

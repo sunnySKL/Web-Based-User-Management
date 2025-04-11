@@ -18,10 +18,34 @@
     <p><strong>Submitted On:</strong> {{ request.created_at.strftime("%Y-%m-%d %H:%M") if request.created_at else "N/A" }}</p>
     <hr>
 
-    <!-- Show the JSON-formatted data for now -->
+    <!-- Display form data in a more readable format -->
     <h3>Submitted Data:</h3>
-    <pre>{{ request.data | tojson(indent=2) }}</pre>
+    <table class="table">
+        <tbody>
+            {% for key, value in form_data.items() %}
+                {% if key != 'signature' and key != 'signature_image_path' %}
+                    <tr>
+                        <th>{{ key.replace('_', ' ').title() }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
 
-    <a href="{{ url_for('admin.review_requests') }}" class="btn btn-secondary">Back</a>
+    <!-- Display signature if available -->
+    {% if form_data.signature_image_path %}
+    <div class="signature-container">
+        <h4>Signature:</h4>
+        <img src="{{ form_data.signature_image_path }}" alt="Signature" style="max-width: 300px; border: 1px solid #ccc; padding: 5px;">
+    </div>
+    {% else %}
+    <p><em>No signature provided.</em></p>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin.review_requests') }}" class="btn btn-secondary">Back</a>
+        <a href="{{ url_for('admin.view_pdf', request_id=request.id) }}" class="btn btn-primary" target="_blank">View PDF</a>
+    </div>
 </div>
 {% endblock %}

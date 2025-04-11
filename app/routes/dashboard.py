@@ -53,22 +53,23 @@ def special_circumstance():
         date = datetime.now().strftime("%m-%d-%Y")
 
         signature_file = request.files.get("signature")
-        signature_filename = None
-        if signature_file:
-            from werkzeug.utils import secure_filename
-            # Optionally, validate file extension if needed
-            signature_filename = secure_filename(signature_file.filename)
-            # Save file to 'app/static/uploads' folder (ensure the folder exists)
-            upload_folder = os.path.join("app", "static", "uploads")
-            # Create the folder if it doesn't exist
-            os.makedirs(upload_folder, exist_ok=True)
-            upload_path = os.path.join(upload_folder, signature_filename)
-            signature_file.save(upload_path)
-
-            # Read binary data
+        signature_base64 = None
+        if signature_file and signature_file.filename != "":
+            # Read binary data before saving the file
             binary_data = signature_file.read()
             # Convert binary data to base64 encoded string
             signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+            
+            # Reset file pointer to beginning of file
+            signature_file.seek(0)
+            
+            # Save file to 'app/static/uploads' folder
+            from werkzeug.utils import secure_filename
+            signature_filename = secure_filename(signature_file.filename)
+            upload_folder = os.path.join("app", "static", "uploads")
+            os.makedirs(upload_folder, exist_ok=True)
+            upload_path = os.path.join(upload_folder, signature_filename)
+            signature_file.save(upload_path)
 
         request_data = {
             "student_name": student_name,
@@ -79,10 +80,8 @@ def special_circumstance():
             "other_option_detail": other_option_detail,
             "justification": justification,
             "date": date,
-            "signature": signature_base64  # store file name
+            "signature": signature_base64  # store base64 encoded signature
         }
-        print(signature_base64)
-        print(request_data["signature"])
 
         # Determine whether to save as draft or submit
         action = request.form.get("action")
@@ -150,20 +149,25 @@ def course_drop():
         class_number = request.form["class_number"]
         date = datetime.now().strftime("%m-%d-%Y")
 
-        # Handle Signature Upload (Like Special Circumstance)
+        # Handle Signature Upload
         signature_file = request.files.get("signature")
-        signature_filename = None
-        if signature_file:
+        signature_base64 = None
+        if signature_file and signature_file.filename != "":
+            # Read binary data before saving the file
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+            
+            # Reset file pointer to beginning of file
+            signature_file.seek(0)
+            
+            # Save file to uploads folder
             from werkzeug.utils import secure_filename
             signature_filename = secure_filename(signature_file.filename)
             upload_folder = os.path.join("app", "static", "uploads")
             os.makedirs(upload_folder, exist_ok=True)
             upload_path = os.path.join(upload_folder, signature_filename)
             signature_file.save(upload_path)
-            # Read binary data
-            binary_data = signature_file.read()
-            # Convert binary data to base64 encoded string
-            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
 
         # Prepare request data for storage
         request_data = {
@@ -175,7 +179,7 @@ def course_drop():
             "catalog_number": catalog_number,
             "class_number": class_number,
             "date": date,
-            "signature": signature_base64,  # Store uploaded signature filename
+            "signature": signature_base64,  # Store base64 encoded signature
         }
 
         # Determine if it's a draft or submitted form
@@ -249,29 +253,51 @@ def view_pdf(request_id):
     temp_dir = os.path.join(current_app.instance_path, "temp")
     os.makedirs(temp_dir, exist_ok=True)
 
-    print(request_data.keys())
-    print(request_data["signature"])
-
+    # Debug prints
+    print("Request data keys:", request_data.keys())
+    
+    # Handle signature if it exists
     if "signature" in request_data and request_data["signature"]:
-        signature_image_filename = "signature.png"  # or .jpg, as appropriate
+        print("Signature found in request data")
+        # Create a unique filename for this signature
+        signature_image_filename = f"signature_{request_id}.png"
         signature_image_path = os.path.join(temp_dir, signature_image_filename)
-        print()
-        print("dkibidi")
-        print()
+        
         try:
+            # Remove file if it already exists
+            if os.path.exists(signature_image_path):
+                os.remove(signature_image_path)
+                
             # Decode the Base64 string into binary data
             signature_binary = base64.b64decode(request_data["signature"])
+            print(f"Decoded signature length: {len(signature_binary)} bytes")
+            
+            # Write image data to file
             with open(signature_image_path, "wb") as img_file:
                 img_file.write(signature_binary)
-            # Include the file name in our data so that LaTeX can refer to it.
+            
+            print(f"Signature saved to: {signature_image_path}")
+            
+            # Set the image path for the template - just use the filename, not the full path
             request_data["signature_image_filename"] = signature_image_filename
         except Exception as e:
-            current_app.logger.error(f"Error decoding signature image: {e}")
+            current_app.logger.error(f"Error processing signature image: {e}")
+            print(f"Error processing signature: {e}")
             request_data["signature_image_filename"] = None
     else:
+        print("No signature data found in the request")
         request_data["signature_image_filename"] = None
 
+    # Copy signature to LaTeX working directory if it exists
+    if request_data["signature_image_filename"]:
+        # Ensure the signature is in the same directory as the .tex file for simpler inclusion
+        signature_source = os.path.join(temp_dir, request_data["signature_image_filename"])
+        if os.path.exists(signature_source):
+            print(f"File exists at {signature_source}")
+        else:
+            print(f"File does not exist: {signature_source}")
 
+    # Generate appropriate template based on form type
     if draft.form_type == 1: 
         rendered_tex = render_template("special_circumstance.tex.j2", request_data=request_data)
         tex_file = os.path.join(temp_dir, "special_circumstance.tex")
@@ -280,28 +306,48 @@ def view_pdf(request_id):
         rendered_tex = render_template("course_drop.tex.j2", request_data=request_data)
         tex_file = os.path.join(temp_dir, "course_drop.tex")
         pdf_file = os.path.join(temp_dir, "course_drop.pdf")
-
-    # Create a temporary directory to store the .tex and .pdf files
-    
-    
+        
     # Write the rendered LaTeX to a file
     with open(tex_file, "w") as f:
         f.write(rendered_tex)
     
+    # Print LaTeX content for debugging
+    print("Generated LaTeX content:")
+    print(rendered_tex[:200] + "...")
     
     # Compile the .tex file into a PDF using pdflatex.
     try:
         makefile_src = os.path.join(current_app.root_path, "latex", "Makefile")
         makefile_dst = os.path.join(temp_dir, "Makefile")
         shutil.copy(makefile_src, makefile_dst)
+        
+        # Run compilation commands
+        print("Running make clean")
         subprocess.run(["make", "-C", temp_dir, "clean"], check=True)
+        
         if draft.form_type == 2:
-            subprocess.run(["make", "-C", temp_dir, "course_drop.pdf"], check=True)
+            print("Compiling course_drop.pdf")
+            result = subprocess.run(["make", "-C", temp_dir, "course_drop.pdf"], check=True, capture_output=True, text=True)
+            print(f"Compilation output: {result.stdout}")
+            if result.stderr:
+                print(f"Compilation errors: {result.stderr}")
+                
+            # Run twice for references
             subprocess.run(["make", "-C", temp_dir, "course_drop.pdf"], check=True)
         else:
+            print("Compiling special_circumstance.pdf")
+            result = subprocess.run(["make", "-C", temp_dir, "special_circumstance.pdf"], check=True, capture_output=True, text=True)
+            print(f"Compilation output: {result.stdout}")
+            if result.stderr:
+                print(f"Compilation errors: {result.stderr}")
+                
+            # Run twice for references
             subprocess.run(["make", "-C", temp_dir, "special_circumstance.pdf"], check=True)
-            subprocess.run(["make", "-C", temp_dir, "special_circumstance.pdf"], check=True)
+            
+        print("PDF compilation completed successfully")
     except subprocess.CalledProcessError as e:
+        current_app.logger.error(f"Error compiling PDF: {e}")
+        print(f"PDF compilation failed: {e}")
         flash("Error generating PDF.", "error")
         return redirect(url_for("dashboard.user_dashboard"))
     
