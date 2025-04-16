@@ -1,36 +1,79 @@
 \documentclass{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
-\usepackage{longtable}
-\usepackage{hyperref}
+\usepackage{color}
+
+% Simple color definition
+\definecolor{uhred}{RGB}{200, 16, 46}
 
 \begin{document}
-\title{Special Request Form}
-\author{ {{ request_data.student_name }} }
-\date{{ request_data.created_at.strftime("%Y-%m-%d") if request_data.created_at else "" }}
-\maketitle
+
+% Simple title
+\begin{center}
+\color{uhred}
+\rule{\linewidth}{1pt}
+\vspace{4mm}
+{\Large \textbf{UNIVERSITY OF HOUSTON}}\\
+\vspace{2mm}
+{\large Special Circumstance Request Form}\\
+\vspace{2mm}
+\rule{\linewidth}{1pt}
+\end{center}
+
+\vspace{0.5cm}
 
 \section*{Student Information}
-\begin{tabular}{ll}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
 \textbf{Student ID:} & {{ request_data.student_id }} \\
+\hline
 \textbf{Degree:} & {{ request_data.degree }} \\
+\hline
 \textbf{Graduation Date:} & {{ request_data.graduation_date }} \\
+\hline
 \end{tabular}
+
+\vspace{0.5cm}
 
 \section*{Special Request Details}
-\begin{tabular}{ll}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
 \textbf{Special Request Option:} & {{ request_data.special_request_option }} \\
+\hline
 {% if request_data.special_request_option == "Other" %}
 \textbf{Other Details:} & {{ request_data.other_option_detail }} \\
+\hline
+{% elif request_data.other_option_detail %}
+\textbf{Additional Details:} & {{ request_data.other_option_detail }} \\
+\hline
 {% endif %}
-\textbf{Justification:} & {{ request_data.justification }} \\
 \end{tabular}
 
-\section*{Signature}
+\vspace{0.5cm}
+
+\section*{Justification}
+\begin{tabular}{|p{15cm}|}
+\hline
+{{ request_data.justification }} \\
+\hline
+\end{tabular}
+
+\vspace{0.5cm}
+
+\section*{Student Signature}
+\begin{center}
 {% if request_data.signature_image_filename %}
-\includegraphics[width=0.5\textwidth]{ {{ request_data.signature_image_filename }} }
+\includegraphics[width=0.4\textwidth]{ {{ request_data.signature_image_filename }} }
 {% else %}
 No signature provided.
 {% endif %}
+\end{center}
+
+\vspace{1cm}
+
+\begin{center}
+\footnotesize
+This document contains confidential information and is for official university use only.
+\end{center}
 
 \end{document}

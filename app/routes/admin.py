@@ -50,16 +50,29 @@ def update_user(user_id):
         new_role = request.form.get('role')
         new_status = request.form.get('status')
 
-        if new_display_name:
+        # Track what was updated for the flash message
+        updated_fields = []
+
+        if new_display_name and new_display_name != user.display_name:
             user.display_name = new_display_name
-        if new_email:
+            updated_fields.append("display name")
+        if new_email and new_email != user.email:
             user.email = new_email
-        if new_role:
+            updated_fields.append("email")
+        if new_role and new_role != user.role:
             user.role = new_role
-        if new_status:
+            updated_fields.append("role")
+        if new_status and new_status != user.status:
             user.status = new_status
+            updated_fields.append("status")
 
         user_service.update_user(user)
+        
+        if updated_fields:
+            flash(f"User information updated successfully! (Updated: {', '.join(updated_fields)})", "success")
+        else:
+            flash("No changes were made to the user information.", "info")
+            
         return redirect(url_for('admin.admin_dashboard'))
     # If GET, render the update form with current user data pre-filled
     return render_template('admin_update.html', user=user)

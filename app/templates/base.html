@@ -5,7 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}User Management{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1">
-
+    <style>
+        .approver-link {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .role-badge {
+            background-color: #f8f9fa;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 5px;
+            font-size: 0.8em;
+            border: 1px solid #ddd;
+        }
+        
+        .role-admin {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .role-counselor, .role-director, .role-supervisor {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .role-user {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        /* Add fade-out animation for flash messages */
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .flash-message.fade-out {
+            animation: fadeOut 1s forwards;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,9 +55,9 @@
                 {% if messages %}
                     <div class="flash-messages">
                         {% for category, message in messages %}
-                            <div class="flash-message {{ category }}">
+                            <div class="flash-message {{ category }}" id="flash-message-{{ loop.index }}">
                                 {{ message }}
-                                <button onclick="this.parentElement.style.display='none';">×</button>
+                                <button onclick="dismissFlashMessage(this.parentElement);">×</button>
                             </div>
                         {% endfor %}
                     </div>
@@ -32,13 +71,22 @@
 					{% if session['exists'] is true and session['active'] is true%}
                     	{% if session.get('role') == 'Admin' %}
                         	<li><a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
-						{% else %}
+						{% elif session.get('role') in ['Department Counselor', 'Academic Director', 'College Supervisor'] %}
+                            <li><a href="{{ url_for('approval.approval_dashboard') }}">Dashboard</a></li>
+                        {% else %}
                         	<li><a href="{{ url_for('dashboard.user_dashboard') }}">Dashboard</a></li>
                     	{% endif %}
 					{% endif %}
                     
                     <li class="user-info">
                         {{ session['user'] }} ({{ session['email'] }})
+                        <span class="role-badge {% if session.get('role') == 'Admin' %}role-admin
+                               {% elif session.get('role') == 'Department Counselor' %}role-counselor
+                               {% elif session.get('role') == 'Academic Director' %}role-director
+                               {% elif session.get('role') == 'College Supervisor' %}role-supervisor
+                               {% elif session.get('role') == 'User' %}role-user{% endif %}">
+                            {{ session.get('role') }}
+                        </span>
                     </li>
                     <li><a href="{{ url_for('auth.logout') }}" class="logout-btn">Logout</a></li>
                 {% else %}
@@ -54,6 +102,31 @@
     </div>
 
 	<script>
+        // Auto-dismiss flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all flash messages
+            const flashMessages = document.querySelectorAll('.flash-message');
+            
+            // Setup timeout for each message
+            flashMessages.forEach(function(message) {
+                // Set timeout to auto-dismiss after 5 seconds
+                setTimeout(function() {
+                    dismissFlashMessage(message);
+                }, 2000); // 5000 milliseconds = 5 seconds
+            });
+        });
+        
+        // Function to dismiss flash messages with a fade-out animation
+        function dismissFlashMessage(element) {
+            // Add the fade-out class for animation
+            element.classList.add('fade-out');
+            
+            // Actually remove the element after animation completes
+            setTimeout(function() {
+                element.style.display = 'none';
+            }, 1000); // 1000 milliseconds = 1 second (match the animation duration)
+        }
+        
         // Fallback if script.js is missing
         fetch("{{ url_for('static', filename='js/script.js') }}")
             .then(response => {

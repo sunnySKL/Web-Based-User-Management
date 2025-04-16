@@ -17,8 +17,8 @@ dashboard = Blueprint("dashboard", __name__)
 @dashboard.route("/dashboard")
 @active_required
 def user_dashboard():
-
-    academic_requests = AcademicRequests.query.filter_by(email=session.get("email")).all()
+    # Get academic requests and order them by ID in descending order
+    academic_requests = AcademicRequests.query.filter_by(email=session.get("email")).order_by(AcademicRequests.id.desc()).all()
     return render_template("dashboard.html", user = session["user"], email = session["email"], role = session["role"], academic_requests = academic_requests)
 
 @dashboard.route("/dashboard/request_form")
@@ -234,14 +234,53 @@ def course_drop_edit(request_id):
 @dashboard.route("/dashboard/delete_form/<int:request_id>", methods=["POST"])
 @active_required
 def delete_form(request_id):
-    # Query for the request; ensure it belongs to the logged-in student
-    draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
+    """Delete a form/request"""
+    try:
+        # Query for the request; ensure it belongs to the logged-in student
+        draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
+        
+        # First, try to delete any approval logs manually with raw SQL
+        # This is a workaround for the case where the approval_logs table doesn't exist yet
+        try:
+            # Use raw SQL to delete any related approval logs first
+            sql = "DELETE FROM approval_logs WHERE request_id = :request_id"
+            db.session.execute(sql, {"request_id": request_id})
+            db.session.commit()
+        except Exception as log_error:
+            # Ignore errors related to missing table - we'll proceed with deleting the request
+            db.session.rollback()
+            current_app.logger.warning(f"Could not delete approval logs: {log_error}")
+        
+        # Now delete the request
+        db.session.delete(draft)
+        db.session.commit()
+        
+        flash("Your request has been deleted.", "success")
+    except Exception as e:
+        # Log the error and rollback the transaction
+        current_app.logger.error(f"Error deleting request {request_id}: {e}")
+        db.session.rollback()
+        
+        # For this specific error, try another approach
+        if "relation \"approval_logs\" does not exist" in str(e):
+            try:
+                # Try direct SQL delete which doesn't trigger the ORM relationship
+                sql = "DELETE FROM academic_requests WHERE id = :id AND email = :email"
+                result = db.session.execute(sql, {"id": request_id, "email": session.get("email")})
+                db.session.commit()
+                
+                if result.rowcount > 0:
+                    flash("Your request has been deleted.", "success")
+                    return redirect(url_for("dashboard.user_dashboard"))
+                else:
+                    flash("Request not found or you don't have permission to delete it.", "error")
+            except Exception as direct_error:
+                db.session.rollback()
+                current_app.logger.error(f"Error with direct SQL delete: {direct_error}")
+                flash(f"Could not delete the request. Please contact support.", "error")
+        else:
+            flash(f"An error occurred while deleting the request. Please try again later.", "error")
     
-    # Delete the draft and commit changes
-    db.session.delete(draft)
-    db.session.commit()
-    
-    flash("Your request has been deleted.", "success")
     return redirect(url_for("dashboard.user_dashboard"))
 
 
@@ -353,4 +392,12 @@ def view_pdf(request_id):
     
     # Return the generated PDF as a response.
     return send_file(pdf_file, mimetype="application/pdf", as_attachment=False)
+
+
+@dashboard.route("/dashboard/view_request/<int:request_id>")
+@active_required
+def view_request_details(request_id):
+    """View details of a specific request for a student"""
+    # Redirect to the approval view route
+    return redirect(url_for("approval.view_request", request_id=request_id))
 

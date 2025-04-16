@@ -18,7 +18,13 @@ SCOPE = ["User.Read"]
 @auth.route("/login")
 def microsoft_login():
     if "user" in session:
-        return redirect(url_for("admin.admin_dashboard"))
+        role = session.get("role")
+        if role == User.ROLE_ADMIN:
+            return redirect(url_for("admin.admin_dashboard"))
+        elif role in [User.ROLE_DEPARTMENT_COUNSELOR, User.ROLE_ACADEMIC_DIRECTOR, User.ROLE_COLLEGE_SUPERVISOR]:
+            return redirect(url_for("approval.approval_dashboard"))
+        else:
+            return redirect(url_for("dashboard.user_dashboard"))
 
     redirect_uri = url_for('auth.microsoft_callback', _external=True)
     login_url = (
@@ -51,12 +57,16 @@ def microsoft_callback():
         return redirect(url_for("main.home"))
 
     flash(f"Welcome, {session['user']}!", "success")
-
-    if user.role.lower() == "admin":
-        session["role"] = "Admin"
+    
+    # Set the session role to the actual user role from the database
+    session["role"] = user.role
+    
+    # Redirect based on role
+    if user.role == User.ROLE_ADMIN:
         return redirect(url_for('admin.admin_dashboard'))
+    elif user.role in [User.ROLE_DEPARTMENT_COUNSELOR, User.ROLE_ACADEMIC_DIRECTOR, User.ROLE_COLLEGE_SUPERVISOR]:
+        return redirect(url_for('approval.approval_dashboard'))
     else:
-        session["role"] = "User"
         return redirect(url_for('dashboard.user_dashboard'))
 
 
@@ -85,7 +95,7 @@ def register():
             flash("An account with that email already exists.", "error")
             return render_template("register.html")
 
-        new_user = User(display_name=display_name, email=email.lower(), role="User", status="active")
+        new_user = User(display_name=display_name, email=email.lower(), role=User.ROLE_USER, status="active")
         db.session.add(new_user)
         db.session.commit()
         flash("Account created successfully! You can now log in.", "success")
