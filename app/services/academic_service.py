@@ -4,6 +4,10 @@ from app.models import AcademicRequests
 from app.extensions.db import db
 from werkzeug.utils import secure_filename
 
+
+API_BASE_URL = 'http://localhost:8000/admin/api/forms/'
+
+
 def get_all_forms():
     pass
 
@@ -51,3 +55,32 @@ def get_form_by_id(form_id):
     return AcademicRequests.query.get_or_404(form_id)
 
 
+def api_create_form(data):
+    response = requests.post(API_BASE_URL, json=data)
+    return response.json()
+
+
+def api_get_form(form_id):
+    """
+    Retrieves form details by performing a GET request for the given form_id.
+    """
+    url = f"{API_BASE_URL}{form_id}/"
+    response = requests.get(url)
+    return response.json()
+
+def api_update_form(form_id, data):
+    """
+    Updates a form by sending a POST to the edit endpoint.
+    `data` should be a JSON dictionary containing updated field values.
+    """
+    url = f"{API_BASE_URL}{form_id}/edit/"
+    response = requests.post(url, json=data)
+    return response.json()
+
+def api_delete_form(form_id):
+    """
+    Deletes a form by sending a POST to the delete endpoint.
+    """
+    url = f"{API_BASE_URL}{form_id}/delete/"
+    response = requests.post(url)
+    return response.json()
