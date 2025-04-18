@@ -10,6 +10,7 @@ import subprocess
 import shutil
 import base64
 from io import BytesIO
+import uuid
 
 
 dashboard = Blueprint("dashboard", __name__)
@@ -33,6 +34,12 @@ def request_form():
     elif form_id == 2:
         flash("Instructor-Initiated Drop Form Requested", "info")
         return redirect(url_for("dashboard.course_drop"))
+    elif form_id == 3:
+        flash("Affidavit of Intent to Become a Permanent Resident Requested", "info")
+        return redirect(url_for("dashboard.affidavit_intent"))
+    elif form_id == 4:
+        flash("Tuition Exemption Request Form Requested", "info")
+        return redirect(url_for("dashboard.tuition_exemption"))
     else:
         flash("Invalid form selection", "error")
     # In a full implementation, you could pre-fill a form with user data or redirect to a dedicated form page.
@@ -341,6 +348,18 @@ def view_pdf(request_id):
         rendered_tex = render_template("special_circumstance.tex.j2", request_data=request_data)
         tex_file = os.path.join(temp_dir, "special_circumstance.tex")
         pdf_file = os.path.join(temp_dir, "special_circumstance.pdf")
+    elif draft.form_type == 2:
+        rendered_tex = render_template("course_drop.tex.j2", request_data=request_data)
+        tex_file = os.path.join(temp_dir, "course_drop.tex")
+        pdf_file = os.path.join(temp_dir, "course_drop.pdf")
+    elif draft.form_type == 3:
+        rendered_tex = render_template("affidavit_intent.tex.j2", request_data=request_data)
+        tex_file = os.path.join(temp_dir, "affidavit_intent.tex")
+        pdf_file = os.path.join(temp_dir, "affidavit_intent.pdf")
+    elif draft.form_type == 4:
+        rendered_tex = render_template("tuition_exemption.tex.j2", request_data=request_data)
+        tex_file = os.path.join(temp_dir, "tuition_exemption.tex")
+        pdf_file = os.path.join(temp_dir, "tuition_exemption.pdf")
     else:
         rendered_tex = render_template("course_drop.tex.j2", request_data=request_data)
         tex_file = os.path.join(temp_dir, "course_drop.tex")
@@ -373,6 +392,24 @@ def view_pdf(request_id):
                 
             # Run twice for references
             subprocess.run(["make", "-C", temp_dir, "course_drop.pdf"], check=True)
+        elif draft.form_type == 3:
+            print("Compiling affidavit_intent.pdf")
+            result = subprocess.run(["make", "-C", temp_dir, "affidavit_intent.pdf"], check=True, capture_output=True, text=True)
+            print(f"Compilation output: {result.stdout}")
+            if result.stderr:
+                print(f"Compilation errors: {result.stderr}")
+                
+            # Run twice for references
+            subprocess.run(["make", "-C", temp_dir, "affidavit_intent.pdf"], check=True)
+        elif draft.form_type == 4:
+            print("Compiling tuition_exemption.pdf")
+            result = subprocess.run(["make", "-C", temp_dir, "tuition_exemption.pdf"], check=True, capture_output=True, text=True)
+            print(f"Compilation output: {result.stdout}")
+            if result.stderr:
+                print(f"Compilation errors: {result.stderr}")
+                
+            # Run twice for references
+            subprocess.run(["make", "-C", temp_dir, "tuition_exemption.pdf"], check=True)
         else:
             print("Compiling special_circumstance.pdf")
             result = subprocess.run(["make", "-C", temp_dir, "special_circumstance.pdf"], check=True, capture_output=True, text=True)
@@ -400,4 +437,265 @@ def view_request_details(request_id):
     """View details of a specific request for a student"""
     # Redirect to the approval view route
     return redirect(url_for("approval.view_request", request_id=request_id))
+
+@dashboard.route("/affidavit_intent", methods=["GET", "POST"])
+@active_required
+def affidavit_intent():
+    if request.method == "POST":
+        # Get form data
+        student_name = session.get("user", "Unknown")
+        student_id = request.form["student_id"]
+        date_of_birth = request.form["date_of_birth"]
+        age = request.form.get("age")
+        county = request.form.get("county")
+        college = request.form.get("college", "University of Houston")
+        signature_date = request.form.get("signature_date", datetime.now().strftime("%m-%d-%Y"))
+
+        # Handle signature upload
+        signature_base64 = None
+        if 'signature' in request.files:
+            signature_file = request.files['signature']
+            if signature_file and signature_file.filename != '':
+                # Read binary data
+                binary_data = signature_file.read()
+                # Convert binary data to base64 encoded string
+                signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+                
+                # Reset file pointer to beginning of file
+                signature_file.seek(0)
+                
+                # Save file to 'app/static/uploads' folder
+                from werkzeug.utils import secure_filename
+                signature_filename = secure_filename(signature_file.filename)
+                upload_folder = os.path.join("app", "static", "uploads")
+                os.makedirs(upload_folder, exist_ok=True)
+                upload_path = os.path.join(upload_folder, signature_filename)
+                signature_file.save(upload_path)
+
+        request_data = {
+            "student_name": student_name,
+            "student_id": student_id,
+            "date_of_birth": date_of_birth,
+            "age": age,
+            "county": county,
+            "college": college,
+            "signature_date": signature_date,
+            "signature": signature_base64
+        }
+
+        # Determine whether to save as draft or submit
+        action = request.form.get("action")
+        status = "draft" if action == "save_draft" else "under_review"
+
+        academic_service.submit_form(request_data, 3, status)
+        flash("Draft saved successfully." if status == "draft" else "Form submitted successfully.", "success")
+        return redirect(url_for("dashboard.user_dashboard"))
+
+    return render_template("affidavit_intent.html", current_date=datetime.now().strftime("%m-%d-%Y"))
+
+@dashboard.route("/tuition_exemption", methods=["GET", "POST"])
+@active_required
+def tuition_exemption():
+    if request.method == "POST":
+        # Get form data
+        student_name = session.get("user", "Unknown")
+        student_id = request.form["student_id"]
+        email = session.get("email", "Unknown")
+        phone = request.form["phone"]
+        semester = request.form["semester"]
+        exemption_type = request.form["exemption_type"]
+        department = request.form["department"]
+        disclosure_type = request.form["disclosure_type"]
+        recipient_type = request.form["recipient_type"]
+        exemption_reason = request.form["exemption_reason"]
+        
+        # Get supporting documents
+        supporting_documents = []
+        if 'supporting_docs' in request.files:
+            files = request.files.getlist('supporting_docs')
+            for file in files:
+                if file and file.filename != '':
+                    from werkzeug.utils import secure_filename
+                    doc_filename = secure_filename(f"doc_{uuid.uuid4().hex}{os.path.splitext(file.filename)[1]}")
+                    upload_folder = os.path.join("app", "static", "uploads")
+                    os.makedirs(upload_folder, exist_ok=True)
+                    upload_path = os.path.join(upload_folder, doc_filename)
+                    file.save(upload_path)
+                    supporting_documents.append(doc_filename)
+        
+        # Handle signature upload
+        signature_base64 = None
+        if 'signature' in request.files:
+            signature_file = request.files['signature']
+            if signature_file and signature_file.filename != '':
+                # Read binary data
+                binary_data = signature_file.read()
+                # Convert binary data to base64 encoded string
+                signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+                
+                # Reset file pointer to beginning of file
+                signature_file.seek(0)
+                
+                # Save file to uploads folder
+                from werkzeug.utils import secure_filename
+                signature_filename = secure_filename(signature_file.filename)
+                upload_folder = os.path.join("app", "static", "uploads")
+                os.makedirs(upload_folder, exist_ok=True)
+                upload_path = os.path.join(upload_folder, signature_filename)
+                signature_file.save(upload_path)
+        
+        signature_date = request.form.get("signature_date", datetime.now().strftime("%m-%d-%Y"))
+
+        request_data = {
+            "student_name": student_name,
+            "student_id": student_id,
+            "email": email,
+            "phone": phone,
+            "semester": semester,
+            "exemption_type": exemption_type,
+            "department": department,
+            "disclosure_type": disclosure_type,
+            "recipient_type": recipient_type,
+            "exemption_reason": exemption_reason,
+            "supporting_documents": supporting_documents,
+            "signature": signature_base64,
+            "signature_date": signature_date
+        }
+
+        # Determine whether to save as draft or submit
+        action = request.form.get("action")
+        status = "draft" if action == "save_draft" else "under_review"
+
+        academic_service.submit_form(request_data, 4, status)
+        flash("Draft saved successfully." if status == "draft" else "Form submitted successfully.", "success")
+        return redirect(url_for("dashboard.user_dashboard"))
+
+    return render_template("tuition_exemption.html", current_date=datetime.now().strftime("%m-%d-%Y"))
+
+@dashboard.route("/affidavit_intent/edit/<int:request_id>", methods=["GET", "POST"])
+@active_required
+def affidavit_intent_edit(request_id):
+    draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
+    if request.method == "POST":
+        # Get form data
+        student_name = session.get("user", "Unknown")
+        student_id = request.form["student_id"]
+        date_of_birth = request.form["date_of_birth"]
+        age = request.form.get("age")
+        county = request.form.get("county")
+        college = request.form.get("college", "University of Houston")
+        signature_date = request.form.get("signature_date", datetime.now().strftime("%m-%d-%Y"))
+
+        # Handle signature upload
+        signature_file = request.files.get("signature")
+        if signature_file and signature_file.filename != "":
+            # Read binary data before saving the file
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+            
+            # Reset file pointer to beginning of file
+            signature_file.seek(0)
+            
+            # Save file to 'app/static/uploads' folder
+            from werkzeug.utils import secure_filename
+            signature_filename = secure_filename(signature_file.filename)
+            upload_folder = os.path.join("app", "static", "uploads")
+            os.makedirs(upload_folder, exist_ok=True)
+            upload_path = os.path.join(upload_folder, signature_filename)
+            signature_file.save(upload_path)
+            
+            # Update signature in draft data
+            draft.data["signature"] = signature_base64
+
+        # Update other form fields
+        draft.data["student_name"] = student_name
+        draft.data["student_id"] = student_id
+        draft.data["date_of_birth"] = date_of_birth
+        draft.data["age"] = age
+        draft.data["county"] = county
+        draft.data["college"] = college
+        draft.data["signature_date"] = signature_date
+
+        db.session.commit()
+        flash("Form updated successfully.", "success")
+        return redirect(url_for("dashboard.user_dashboard"))
+
+    return render_template("affidavit_intent.html", draft=draft.data, current_date=datetime.now().strftime("%m-%d-%Y"))
+
+@dashboard.route("/tuition_exemption/edit/<int:request_id>", methods=["GET", "POST"])
+@active_required
+def tuition_exemption_edit(request_id):
+    draft = AcademicRequests.query.filter_by(id=request_id, email=session.get("email")).first_or_404()
+    if request.method == "POST":
+        # Get form data
+        student_name = session.get("user", "Unknown")
+        student_id = request.form["student_id"]
+        email = session.get("email", "Unknown")
+        phone = request.form["phone"]
+        semester = request.form["semester"]
+        exemption_type = request.form["exemption_type"]
+        department = request.form["department"]
+        disclosure_type = request.form["disclosure_type"]
+        recipient_type = request.form["recipient_type"]
+        exemption_reason = request.form["exemption_reason"]
+        signature_date = request.form.get("signature_date", datetime.now().strftime("%m-%d-%Y"))
+        
+        # Handle new supporting documents if uploaded
+        if 'supporting_docs' in request.files:
+            files = request.files.getlist('supporting_docs')
+            supporting_documents = draft.data.get("supporting_documents", [])
+            
+            for file in files:
+                if file and file.filename != "":
+                    from werkzeug.utils import secure_filename
+                    doc_filename = secure_filename(f"doc_{uuid.uuid4().hex}{os.path.splitext(file.filename)[1]}")
+                    upload_folder = os.path.join("app", "static", "uploads")
+                    os.makedirs(upload_folder, exist_ok=True)
+                    upload_path = os.path.join(upload_folder, doc_filename)
+                    file.save(upload_path)
+                    supporting_documents.append(doc_filename)
+            
+            draft.data["supporting_documents"] = supporting_documents
+        
+        # Handle signature upload
+        signature_file = request.files.get("signature")
+        if signature_file and signature_file.filename != "":
+            # Read binary data before saving the file
+            binary_data = signature_file.read()
+            # Convert binary data to base64 encoded string
+            signature_base64 = base64.b64encode(binary_data).decode('utf-8')
+            
+            # Reset file pointer to beginning of file
+            signature_file.seek(0)
+            
+            # Save file to uploads folder
+            from werkzeug.utils import secure_filename
+            signature_filename = secure_filename(signature_file.filename)
+            upload_folder = os.path.join("app", "static", "uploads")
+            os.makedirs(upload_folder, exist_ok=True)
+            upload_path = os.path.join(upload_folder, signature_filename)
+            signature_file.save(upload_path)
+            
+            # Update signature in draft data
+            draft.data["signature"] = signature_base64
+
+        # Update other form fields
+        draft.data["student_name"] = student_name
+        draft.data["student_id"] = student_id
+        draft.data["email"] = email
+        draft.data["phone"] = phone
+        draft.data["semester"] = semester
+        draft.data["exemption_type"] = exemption_type
+        draft.data["department"] = department
+        draft.data["disclosure_type"] = disclosure_type
+        draft.data["recipient_type"] = recipient_type
+        draft.data["exemption_reason"] = exemption_reason
+        draft.data["signature_date"] = signature_date
+
+        db.session.commit()
+        flash("Form updated successfully.", "success")
+        return redirect(url_for("dashboard.user_dashboard"))
+
+    return render_template("tuition_exemption.html", draft=draft.data, current_date=datetime.now().strftime("%m-%d-%Y"))
 

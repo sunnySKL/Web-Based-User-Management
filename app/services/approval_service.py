@@ -190,4 +190,63 @@ def get_approval_history(request_id):
     except Exception as e:
         # Handle case where approval_logs table might not exist
         print(f"Error retrieving approval history: {e}")
-        return [] 
+        return []
+
+def skip_review(request_id, approver_email, approver_role, comments=None):
+    """Skip review and pass to the next approver in the sequence"""
+    request = AcademicRequests.query.get_or_404(request_id)
+    
+    # Map UI role to internal role identifier
+    role_mapping = {
+        User.ROLE_DEPARTMENT_COUNSELOR: "department_counselor",
+        User.ROLE_ACADEMIC_DIRECTOR: "academic_director", 
+        User.ROLE_COLLEGE_SUPERVISOR: "college_supervisor"
+    }
+    
+    approver_stage = role_mapping.get(approver_role)
+    
+    # Validate approver can skip this request
+    if request.current_approver != approver_stage or request.status != STATUS_UNDER_REVIEW:
+        return False, "You are not authorized to skip this request or it's not in the correct status."
+    
+    # College Supervisor is the final approver and cannot skip
+    if approver_stage == "college_supervisor":
+        return False, "As the final approver, you cannot skip your review."
+    
+    try:
+        # Create skip log
+        skip_log = ApprovalLog(
+            request_id=request_id,
+            approver_email=approver_email,
+            approver_role=approver_role,
+            status="skipped",
+            comments=comments or "Review skipped - no opinion"
+        )
+        db.session.add(skip_log)
+        
+        # Get current position in approval sequence
+        current_index = APPROVAL_SEQUENCE.index(approver_stage)
+        
+        # Move to next approver in sequence
+        request.current_approver = APPROVAL_SEQUENCE[current_index + 1]
+        
+        db.session.commit()
+        return True, "Request review skipped successfully"
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error skipping request: {e}")
+        
+        # Even if we can't create a skip log, still update the request status
+        try:
+            # Get current position in approval sequence
+            current_index = APPROVAL_SEQUENCE.index(approver_stage)
+            
+            # Move to next approver in sequence
+            request.current_approver = APPROVAL_SEQUENCE[current_index + 1]
+            
+            db.session.commit()
+            return True, "Request review skipped successfully"
+        except Exception as inner_e:
+            db.session.rollback()
+            print(f"Error updating request status: {inner_e}")
+            return False, f"Error processing skip: {str(e)}" 

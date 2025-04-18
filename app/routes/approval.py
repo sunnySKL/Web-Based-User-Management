@@ -170,7 +170,7 @@ def process_approval(request_id):
         request_id, 
         user_email, 
         user_role,
-        'rejected' if action == 'reject' else 'approved',
+        'skipped' if action == 'skip' else ('rejected' if action == 'reject' else 'approved'),
         comments or 'No comments provided'
     )
     
@@ -189,6 +189,17 @@ def process_approval(request_id):
                 flash(message, "error")
             else:
                 flash(message, "error")
+        elif action == "skip":
+            # Only Department Counselor and Academic Director can skip
+            if user_role not in [User.ROLE_DEPARTMENT_COUNSELOR, User.ROLE_ACADEMIC_DIRECTOR]:
+                flash("You are not authorized to skip this review", "error")
+            else:
+                success, message = approval_service.skip_review(request_id, user_email, user_role, comments)
+                if success:
+                    # Blue info message for skipped reviews
+                    flash(message, "info")
+                else:
+                    flash(message, "error")
         else:
             flash("Invalid action", "error")
     except Exception as e:
@@ -325,6 +336,18 @@ def view_pdf(request_id):
             rendered_tex = render_template("special_circumstance.tex.j2", request_data=request_data)
             tex_file = os.path.join(temp_dir, "special_circumstance.tex")
             pdf_file = os.path.join(temp_dir, "special_circumstance.pdf")
+        elif form_request.form_type == 2:
+            rendered_tex = render_template("course_drop.tex.j2", request_data=request_data)
+            tex_file = os.path.join(temp_dir, "course_drop.tex")
+            pdf_file = os.path.join(temp_dir, "course_drop.pdf")
+        elif form_request.form_type == 3:
+            rendered_tex = render_template("affidavit_intent.tex.j2", request_data=request_data)
+            tex_file = os.path.join(temp_dir, "affidavit_intent.tex")
+            pdf_file = os.path.join(temp_dir, "affidavit_intent.pdf")
+        elif form_request.form_type == 4:
+            rendered_tex = render_template("tuition_exemption.tex.j2", request_data=request_data)
+            tex_file = os.path.join(temp_dir, "tuition_exemption.tex")
+            pdf_file = os.path.join(temp_dir, "tuition_exemption.pdf")
         else:
             rendered_tex = render_template("course_drop.tex.j2", request_data=request_data)
             tex_file = os.path.join(temp_dir, "course_drop.tex")
@@ -357,6 +380,24 @@ def view_pdf(request_id):
                     
                 # Run twice for references
                 subprocess.run(["make", "-C", temp_dir, "course_drop.pdf"], check=True)
+            elif form_request.form_type == 3:
+                print("Compiling affidavit_intent.pdf")
+                result = subprocess.run(["make", "-C", temp_dir, "affidavit_intent.pdf"], check=True, capture_output=True, text=True)
+                print(f"Compilation output: {result.stdout}")
+                if result.stderr:
+                    print(f"Compilation errors: {result.stderr}")
+                    
+                # Run twice for references
+                subprocess.run(["make", "-C", temp_dir, "affidavit_intent.pdf"], check=True)
+            elif form_request.form_type == 4:
+                print("Compiling tuition_exemption.pdf")
+                result = subprocess.run(["make", "-C", temp_dir, "tuition_exemption.pdf"], check=True, capture_output=True, text=True)
+                print(f"Compilation output: {result.stdout}")
+                if result.stderr:
+                    print(f"Compilation errors: {result.stderr}")
+                    
+                # Run twice for references
+                subprocess.run(["make", "-C", temp_dir, "tuition_exemption.pdf"], check=True)
             else:
                 print("Compiling special_circumstance.pdf")
                 result = subprocess.run(["make", "-C", temp_dir, "special_circumstance.pdf"], check=True, capture_output=True, text=True)

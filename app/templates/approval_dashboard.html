@@ -44,6 +44,10 @@
                             Special Circumstance
                             {% elif req.form_type|string == "2" %}
                             Instructor Drop Form
+                            {% elif req.form_type|string == "3" %}
+                            Affidavit of Intent
+                            {% elif req.form_type|string == "4" %}
+                            Tuition Exemption
                             {% else %}
                             Unknown Form
                             {% endif %}

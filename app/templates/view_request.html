@@ -25,6 +25,10 @@
             Special Circumstance
             {% elif request.form_type|string == "2" %}
             Instructor Drop Form
+            {% elif request.form_type|string == "3" %}
+            Affidavit of Intent
+            {% elif request.form_type|string == "4" %}
+            Tuition Exemption
             {% else %}
             Unknown Form
             {% endif %}
@@ -121,7 +125,10 @@
             
             <div class="action-buttons">
                 <button type="submit" name="action" value="approve" class="btn btn-success btn-lg" style="font-weight: bold; padding: 10px 20px; margin-right: 15px;">Approve</button>
-                <button type="submit" name="action" value="reject" class="btn btn-danger btn-lg" style="font-weight: bold; padding: 10px 20px;">Reject</button>
+                <button type="submit" name="action" value="reject" class="btn btn-danger btn-lg" style="font-weight: bold; padding: 10px 20px; margin-right: 15px;">Reject</button>
+                {% if session.get('role') in ["Department Counselor", "Academic Director"] %}
+                <button type="submit" name="action" value="skip" class="btn btn-secondary btn-lg" style="font-weight: bold; padding: 10px 20px;">Skip Review</button>
+                {% endif %}
             </div>
         </form>
     </div>

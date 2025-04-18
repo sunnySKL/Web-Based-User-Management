@@ -233,6 +233,18 @@ def view_pdf(request_id):
         rendered_tex = render_template("special_circumstance.tex.j2", request_data=request_data)
         tex_file = os.path.join(temp_dir, "special_circumstance.tex")
         pdf_file = os.path.join(temp_dir, "special_circumstance.pdf")
+    elif draft.form_type == 2:
+        rendered_tex = render_template("course_drop.tex.j2", request_data=request_data)
+        tex_file = os.path.join(temp_dir, "course_drop.tex")
+        pdf_file = os.path.join(temp_dir, "course_drop.pdf")
+    elif draft.form_type == 3:
+        rendered_tex = render_template("affidavit_intent.tex.j2", request_data=request_data)
+        tex_file = os.path.join(temp_dir, "affidavit_intent.tex")
+        pdf_file = os.path.join(temp_dir, "affidavit_intent.pdf")
+    elif draft.form_type == 4:
+        rendered_tex = render_template("tuition_exemption.tex.j2", request_data=request_data)
+        tex_file = os.path.join(temp_dir, "tuition_exemption.tex")
+        pdf_file = os.path.join(temp_dir, "tuition_exemption.pdf")
     else:
         rendered_tex = render_template("course_drop.tex.j2", request_data=request_data)
         tex_file = os.path.join(temp_dir, "course_drop.tex")
@@ -264,6 +276,22 @@ def view_pdf(request_id):
             
             # Run twice for references
             subprocess.run(["make", "-C", temp_dir, "course_drop.pdf"], check=True)
+        elif draft.form_type == 3:
+            print("Admin view - Compiling affidavit_intent.pdf")
+            result = subprocess.run(["make", "-C", temp_dir, "affidavit_intent.pdf"], check=True, capture_output=True, text=True)
+            if result.stderr:
+                print(f"Admin view - Compilation errors: {result.stderr}")
+            
+            # Run twice for references
+            subprocess.run(["make", "-C", temp_dir, "affidavit_intent.pdf"], check=True)
+        elif draft.form_type == 4:
+            print("Admin view - Compiling tuition_exemption.pdf")
+            result = subprocess.run(["make", "-C", temp_dir, "tuition_exemption.pdf"], check=True, capture_output=True, text=True)
+            if result.stderr:
+                print(f"Admin view - Compilation errors: {result.stderr}")
+            
+            # Run twice for references
+            subprocess.run(["make", "-C", temp_dir, "tuition_exemption.pdf"], check=True)
         else:
             print("Admin view - Compiling special_circumstance.pdf")
             result = subprocess.run(["make", "-C", temp_dir, "special_circumstance.pdf"], check=True, capture_output=True, text=True)

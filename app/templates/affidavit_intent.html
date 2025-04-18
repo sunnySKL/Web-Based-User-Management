@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Affidavit of Intent to Become a Permanent Resident{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Affidavit of Intent to Become a Permanent Resident</h1>
+    <p>Use this form to declare your intent to establish permanent residence in Texas.</p>
+
+    <form action="{{ url_for('dashboard.affidavit_intent') }}" method="POST" enctype="multipart/form-data">
+        <div>
+            <label for="student_name">Student Name:</label>
+            <input type="text" id="student_name" name="student_name" value="{{ session['user'] }}" readonly>
+        </div>
+
+        <div>
+            <label for="student_id">Student ID (PeopleSoft ID):</label>
+            <input type="text" id="student_id" name="student_id" placeholder="Enter your PeopleSoft ID" value="{{ draft.student_id if draft else '' }}" required>
+        </div>
+
+        <div>
+            <label for="date_of_birth">Date of Birth:</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" value="{{ draft.date_of_birth if draft else '' }}" required>
+        </div>
+
+        <div>
+            <label for="county">County:</label>
+            <input type="text" id="county" name="county" placeholder="Enter county name" value="{{ draft.county if draft else '' }}" required>
+        </div>
+
+        <div>
+            <label for="college">College/University Name:</label>
+            <input type="text" id="college" name="college" value="{{ draft.college if draft and draft.college else 'University of Houston' }}" readonly>
+        </div>
+
+        <div>
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" min="16" max="120" value="{{ draft.age if draft else '' }}" required>
+        </div>
+
+        <div>
+            <label for="signature">Student Signature (Upload an image file):</label>
+            <input type="file" id="signature" name="signature" accept="image/*">
+            <small>If you don't upload a signature, a space will be provided on the PDF for a physical signature.</small>
+        </div>
+
+        <div>
+            <label for="signature_date">Date of Signature:</label>
+            <input type="date" id="signature_date" name="signature_date" value="{{ current_date }}">
+        </div>
+
+        <div>
+            <button type="submit" name="action" value="save_draft" class="btn btn-secondary">Save Draft</button>
+            <button type="submit" name="action" value="submit" class="btn btn-primary">Submit Request</button>
+            <a href="{{ url_for('dashboard.user_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %} 

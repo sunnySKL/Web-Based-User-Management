@@ -13,6 +13,8 @@
 			<option value="" disabled selected>Select a form</option>
 			<option value="1">Special Circumstance Form</option>
 			<option value="2">Instructor-Initiated Drop Form</option>
+			<option value="3">Affidavit of Intent to Become a Permanent Resident</option>
+			<option value="4">Tuition Exemption Request Form</option>
 		</select>
 		<button type="submit" class="btn btn-primary">Submit Request</button>
 	</form>
@@ -40,6 +42,10 @@
 						Special Circumstance
 						{% elif req.form_type|string == "2" %}
 						Instructor Drop Form
+						{% elif req.form_type|string == "3" %}
+						Affidavit of Intent
+						{% elif req.form_type|string == "4" %}
+						Tuition Exemption
 						{% else %}
 						Unknown Form
 						{% endif %}
@@ -48,7 +54,7 @@
 					<td class="status {{ req.status|lower|replace(' ', '-') }}">
 						{{ req.status.replace('_', ' ').title() }}
 					</td>
-					
+
 					<td>
 						{% if req.status == "under_review" %}
 							{% if req.current_approver == "department_counselor" %}
@@ -79,6 +85,16 @@
 
 						{% elif req.form_type|string == "2" %}
 						<form action="{{ url_for('dashboard.course_drop_edit', request_id=req.id) }}" method="GET" style="display:inline;">
+							<button type="submit" class="btn btn-secondary btn-sm">Update</button>
+						</form>
+
+						{% elif req.form_type|string == "3" %}
+						<form action="{{ url_for('dashboard.affidavit_intent_edit', request_id=req.id) }}" method="GET" style="display:inline;">
+							<button type="submit" class="btn btn-secondary btn-sm">Update</button>
+						</form>
+
+						{% elif req.form_type|string == "4" %}
+						<form action="{{ url_for('dashboard.tuition_exemption_edit', request_id=req.id) }}" method="GET" style="display:inline;">
 							<button type="submit" class="btn btn-secondary btn-sm">Update</button>
 						</form>
 

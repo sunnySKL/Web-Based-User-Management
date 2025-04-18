@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Tuition Exemption Request Form{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Tuition Exemption Request Form</h1>
+    <p>Use this form to request an exemption from tuition fees.</p>
+
+    <form action="{{ url_for('dashboard.tuition_exemption') }}" method="POST" enctype="multipart/form-data">
+        <div>
+            <label for="student_name">Student Name:</label>
+            <input type="text" id="student_name" name="student_name" value="{{ session['user'] }}" readonly>
+        </div>
+
+        <div>
+            <label for="student_id">Student ID (PeopleSoft ID):</label>
+            <input type="text" id="student_id" name="student_id" placeholder="Enter your PeopleSoft ID" value="{{ draft.student_id if draft else '' }}" required>
+        </div>
+
+        <div>
+            <label for="phone">Phone Number:</label>
+            <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" value="{{ draft.phone if draft else '' }}" required>
+        </div>
+
+        <div>
+            <label for="semester">Semester:</label>
+            <select id="semester" name="semester" required>
+                <option value="">Select Semester</option>
+                <option value="Fall" {% if draft and draft.semester == 'Fall' %}selected{% endif %}>Fall</option>
+                <option value="Spring" {% if draft and draft.semester == 'Spring' %}selected{% endif %}>Spring</option>
+                <option value="Summer" {% if draft and draft.semester == 'Summer' %}selected{% endif %}>Summer</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="exemption_type">Exemption Type:</label>
+            <select id="exemption_type" name="exemption_type" required>
+                <option value="">Select an option</option>
+                <option value="Veteran Exemption" {% if draft and draft.exemption_type == 'Veteran Exemption' %}selected{% endif %}>Veteran Exemption</option>
+                <option value="Dependent of Veteran" {% if draft and draft.exemption_type == 'Dependent of Veteran' %}selected{% endif %}>Dependent of Veteran</option>
+                <option value="Economic Hardship" {% if draft and draft.exemption_type == 'Economic Hardship' %}selected{% endif %}>Economic Hardship</option>
+                <option value="Academic Excellence" {% if draft and draft.exemption_type == 'Academic Excellence' %}selected{% endif %}>Academic Excellence</option>
+                <option value="Other" {% if draft and draft.exemption_type == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="department">Department/Office:</label>
+            <select id="department" name="department" required>
+                <option value="">Select a department</option>
+                <option value="Registration and Academic Records" {% if draft and draft.department == 'Registration and Academic Records' %}selected{% endif %}>Registration and Academic Records</option>
+                <option value="Scholarships and Financial Aid" {% if draft and draft.department == 'Scholarships and Financial Aid' %}selected{% endif %}>Scholarships and Financial Aid</option>
+                <option value="Student Financial Services" {% if draft and draft.department == 'Student Financial Services' %}selected{% endif %}>Student Financial Services</option>
+                <option value="Undergraduate Scholars" {% if draft and draft.department == 'Undergraduate Scholars' %}selected{% endif %}>Undergraduate Scholars @ UH</option>
+                <option value="University Advancement" {% if draft and draft.department == 'University Advancement' %}selected{% endif %}>University Advancement</option>
+                <option value="Dean of Students Office" {% if draft and draft.department == 'Dean of Students Office' %}selected{% endif %}>Dean of Students Office</option>
+                <option value="Other" {% if draft and draft.department == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="disclosure_type">Information to Disclose:</label>
+            <select id="disclosure_type" name="disclosure_type" required>
+                <option value="">Select information type</option>
+                <option value="Grades/Transcripts" {% if draft and draft.disclosure_type == 'Grades/Transcripts' %}selected{% endif %}>Grades/Transcripts</option>
+                <option value="Financial Aid" {% if draft and draft.disclosure_type == 'Financial Aid' %}selected{% endif %}>Financial Aid</option>
+                <option value="Disciplinary" {% if draft and draft.disclosure_type == 'Disciplinary' %}selected{% endif %}>Disciplinary</option>
+                <option value="Housing" {% if draft and draft.disclosure_type == 'Housing' %}selected{% endif %}>Housing</option>
+                <option value="Scholarship and/or Honors" {% if draft and draft.disclosure_type == 'Scholarship and/or Honors' %}selected{% endif %}>Scholarship and/or Honors</option>
+                <option value="Academic Records" {% if draft and draft.disclosure_type == 'Academic Records' %}selected{% endif %}>Academic Records</option>
+                <option value="All University Records" {% if draft and draft.disclosure_type == 'All University Records' %}selected{% endif %}>All University Records</option>
+                <option value="Billing" {% if draft and draft.disclosure_type == 'Billing' %}selected{% endif %}>Billing</option>
+                <option value="Other" {% if draft and draft.disclosure_type == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="recipient_type">Release Information To:</label>
+            <select id="recipient_type" name="recipient_type" required>
+                <option value="">Select recipient type</option>
+                <option value="Family" {% if draft and draft.recipient_type == 'Family' %}selected{% endif %}>Family</option>
+                <option value="Educational Institution" {% if draft and draft.recipient_type == 'Educational Institution' %}selected{% endif %}>Educational Institution</option>
+                <option value="Honor or Award" {% if draft and draft.recipient_type == 'Honor or Award' %}selected{% endif %}>Honor or Award</option>
+                <option value="Employer/Prospective Employer" {% if draft and draft.recipient_type == 'Employer/Prospective Employer' %}selected{% endif %}>Employer/Prospective Employer</option>
+                <option value="Public or Media" {% if draft and draft.recipient_type == 'Public or Media' %}selected{% endif %}>Public or Media</option>
+                <option value="Other" {% if draft and draft.recipient_type == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="exemption_reason">Reason for Exemption:</label>
+            <textarea id="exemption_reason" name="exemption_reason" rows="4" required>{{ draft.exemption_reason if draft else '' }}</textarea>
+        </div>
+
+       
+
+        <div>
+            <label for="signature">Student Signature (Upload an image file):</label>
+            <input type="file" id="signature" name="signature" accept="image/*">
+            <small>If you don't upload a signature, a space will be provided on the PDF for a physical signature.</small>
+        </div>
+
+        <div>
+            <label for="signature_date">Date of Signature:</label>
+            <input type="date" id="signature_date" name="signature_date" value="{{ current_date }}">
+        </div>
+
+        <div>
+            <button type="submit" name="action" value="save_draft" class="btn btn-secondary">Save Draft</button>
+            <button type="submit" name="action" value="submit" class="btn btn-primary">Submit Request</button>
+            <a href="{{ url_for('dashboard.user_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %} 
