@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Complete Your Profile{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  <h2>Welcome, {{ session['user'] }}!</h2>
+  <p><strong>Email:</strong> {{ session['email'] }}</p>
+  <p><strong>Role:</strong> {{ session['role'] }}</p>
+  <p class="text-warning">Before you can continue, please enter your UH ID.</p>
+
+  <form action="{{ url_for('auth.complete_profile') }}" method="POST" class="form-inline" style="max-width: 400px; margin-top: 1em;">
+    <div class="form-group" style="width: 100%;">
+      <label for="uh_id" class="sr-only">UH ID</label>
+      <input
+        type="text"
+        id="uh_id"
+        name="uh_id"
+        class="form-control"
+        placeholder="Enter your UH ID"
+        required
+      />
+    </div>
+    <button type="submit" class="btn btn-primary" style="margin-left: 0.5em;">
+      Submit
+    </button>
+  </form>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="margin-top: 1em;">
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ 'danger' if category=='error' else category }}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+</div>
+{% endblock %}

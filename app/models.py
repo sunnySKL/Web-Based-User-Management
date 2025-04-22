@@ -13,6 +13,7 @@ class User(db.Model):
     ROLE_COLLEGE_SUPERVISOR = "College Supervisor"
 
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uh_id = db.Column(db.Integer, unique = True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     display_name = db.Column(db.String(120), nullable=False)
     role = db.Column(db.String(50), default=ROLE_USER)

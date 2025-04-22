@@ -65,8 +65,10 @@
             {% endwith %}
 
             <ul>
-                <li><a href="{{ url_for('main.home') }}">Home</a></li>
-                
+				{% if request.endpoint != 'auth.complete_profile' %}
+                	<li><a href="{{ url_for('main.home') }}">Home</a></li>
+				{% endif %}
+
                 {% if 'user' in session %}
 					{% if session['exists'] is true and session['active'] is true%}
                     	{% if session.get('role') == 'Admin' %}

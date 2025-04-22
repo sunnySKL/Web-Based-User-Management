@@ -38,8 +38,6 @@ def microsoft_callback(redirect_uri):
 
     session["user"] = user_info.get("displayName", "Unknown User")
     session["email"] = user_info.get("mail", "No Email Provided")
-    session["exists"] = True
-    session["active"] = True
     session["ID"] = user_info["id"]
 
     return user_info, "yipee"
