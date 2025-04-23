@@ -54,3 +54,35 @@ class ApprovalLog(db.Model):
     
     def __repr__(self):
         return f"<ApprovalLog {self.id} for request {self.request_id} by {self.approver_role}>"
+
+class ApprovalWorkflow(db.Model):
+    """Model for storing approval workflow configurations"""
+    __tablename__ = "approval_workflows"
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone(-timedelta(hours=5)).utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone(-timedelta(hours=5)).utc),
+                          onupdate=lambda: datetime.now(timezone(-timedelta(hours=5)).utc))
+    # Relationship with workflow steps
+    steps = db.relationship('WorkflowStep', backref='workflow', lazy=True, 
+                           cascade="all, delete-orphan", order_by="WorkflowStep.step_order")
+    
+    def __repr__(self):
+        return f"<ApprovalWorkflow {self.name}>"
+
+class WorkflowStep(db.Model):
+    """Model for storing individual steps in an approval workflow"""
+    __tablename__ = "workflow_steps"
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    workflow_id = db.Column(db.Integer, db.ForeignKey('approval_workflows.id'), nullable=False)
+    role = db.Column(db.String(50), nullable=False)  # Role required for this approval step
+    step_order = db.Column(db.Integer, nullable=False)  # Order in the workflow
+    can_skip = db.Column(db.Boolean, default=False)  # Whether this step can be skipped
+    is_required = db.Column(db.Boolean, default=True)  # Whether this step is mandatory
+    
+    def __repr__(self):
+        return f"<WorkflowStep {self.id} for workflow {self.workflow_id} - {self.role}>"

@@ -1,8 +1,9 @@
 from flask import session, request
 import os
-from app.models import AcademicRequests
+from app.models import AcademicRequests, User
 from app.extensions.db import db
 from werkzeug.utils import secure_filename
+import app.services.workflow_service as workflow_service
 
 
 API_BASE_URL = 'http://localhost:8000/admin/api/forms/'
@@ -13,13 +14,36 @@ def get_all_forms():
 
 #form_type = 1 -> special circumstance
 def submit_form(data, form_type, status):
+    # Only determine workflow when actually submitting (not for drafts)
+    current_approver = None
+    if status == "under_review":
+        # Get default workflow and determine first approver
+        workflow = workflow_service.get_default_workflow()
+        if workflow:
+            steps = workflow_service.get_workflow_steps(workflow.id)
+            if steps and len(steps) > 0:
+                # Get the first step in the workflow
+                first_step = steps[0]
+                # Map UI role to internal role identifier
+                role_mapping = {
+                    User.ROLE_DEPARTMENT_COUNSELOR: "department_counselor",
+                    User.ROLE_ACADEMIC_DIRECTOR: "academic_director", 
+                    User.ROLE_COLLEGE_SUPERVISOR: "college_supervisor"
+                }
+                current_approver = role_mapping.get(first_step.role, "department_counselor")
+            else:
+                # Fallback to default if no steps found
+                current_approver = "department_counselor"
+        else:
+            # Fallback to default if no workflow found
+            current_approver = "department_counselor"
+    
     new_request = AcademicRequests(
         email=session.get("email"),
         form_type=form_type,  
         data=data,
         status=status,
-        # When submitting a form, set the first approver in the sequence
-        current_approver="department_counselor" if status == "under_review" else None
+        current_approver=current_approver
     )
     db.session.add(new_request)
     db.session.commit()
@@ -35,7 +59,27 @@ def update_form(id, form_type, updated_data):
     # If the form is being submitted (not just saved as draft)
     if updated_data.get("action") != "save_draft":
         draft.status = "under_review"
-        draft.current_approver = "department_counselor"
+        
+        # Get default workflow and determine first approver
+        workflow = workflow_service.get_default_workflow()
+        if workflow:
+            steps = workflow_service.get_workflow_steps(workflow.id)
+            if steps and len(steps) > 0:
+                # Get the first step in the workflow
+                first_step = steps[0]
+                # Map UI role to internal role identifier
+                role_mapping = {
+                    User.ROLE_DEPARTMENT_COUNSELOR: "department_counselor",
+                    User.ROLE_ACADEMIC_DIRECTOR: "academic_director", 
+                    User.ROLE_COLLEGE_SUPERVISOR: "college_supervisor"
+                }
+                draft.current_approver = role_mapping.get(first_step.role, "department_counselor")
+            else:
+                # Fallback to default if no steps found
+                draft.current_approver = "department_counselor"
+        else:
+            # Fallback to default if no workflow found
+            draft.current_approver = "department_counselor"
     
     db.session.commit()
 

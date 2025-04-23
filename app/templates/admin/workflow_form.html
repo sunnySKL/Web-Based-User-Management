@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}{% if workflow %}Edit Workflow{% else %}New Workflow{% endif %}{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    <h1>{% if workflow %}Edit Workflow{% else %}New Workflow{% endif %}</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+                {{ message }}
+                <button onclick="dismissFlashMessage(this.parentElement);">×</button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Workflow Form -->
+    <div class="form-container" style="margin-bottom: 20px; padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow);">
+        <h2>Workflow Details</h2>
+        <form method="POST" action="{% if workflow %}{{ url_for('admin.edit_workflow', workflow_id=workflow.id) }}{% else %}{{ url_for('admin.new_workflow') }}{% endif %}">
+            <div class="form-group">
+                <label for="name">Workflow Name*</label>
+                <input type="text" id="name" name="name" value="{{ workflow.name if workflow else '' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="3">{{ workflow.description if workflow else '' }}</textarea>
+            </div>
+            
+            {% if workflow %}
+            <div class="form-group">
+                <label for="is_active">Active</label>
+                <input type="checkbox" id="is_active" name="is_active" {% if workflow.is_active %}checked{% endif %}>
+            </div>
+            {% endif %}
+            
+            <div class="form-buttons">
+                <button type="submit">{% if workflow %}Update Workflow{% else %}Create Workflow{% endif %}</button>
+                <a href="{{ url_for('admin.manage_workflows') }}" class="btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Workflow Steps (only for edit mode) -->
+    {% if workflow %}
+    <div class="form-container" style="margin-bottom: 20px; padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Workflow Steps</h2>
+        </div>
+        
+        <!-- Existing Steps -->
+        {% if steps %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Role</th>
+                        <th>Can Skip</th>
+                        <th>Required</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for step in steps %}
+                    <tr>
+                        <td>{{ step.step_order }}</td>
+                        <td>{{ step.role }}</td>
+                        <td>
+                            {% if step.can_skip %}
+                            <span class="status approved">Yes</span>
+                            {% else %}
+                            <span class="status rejected">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if step.is_required %}
+                            <span class="status approved">Yes</span>
+                            {% else %}
+                            <span class="status under_review">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn" 
+                                    onclick="toggleStepEditForm('editStepForm{{ step.id }}')">
+                                Edit
+                            </button>
+                            <form method="POST" action="{{ url_for('admin.delete_workflow_step', step_id=step.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-danger" 
+                                        onclick="return confirm('Are you sure you want to delete this step?')">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    <!-- Edit Step Form (initially hidden) -->
+                    <tr id="editStepForm{{ step.id }}" style="display:none;">
+                        <td colspan="5">
+                            <div class="form-container" style="margin: 10px 0; padding: 15px;">
+                                <h3>Edit Workflow Step</h3>
+                                <form method="POST" action="{{ url_for('admin.update_workflow_step', step_id=step.id) }}">
+                                    <div class="form-group">
+                                        <label for="role{{ step.id }}">Role*</label>
+                                        <select id="role{{ step.id }}" name="role" required>
+                                            <option value="Department Counselor" {% if step.role == 'Department Counselor' %}selected{% endif %}>Department Counselor</option>
+                                            <option value="Academic Director" {% if step.role == 'Academic Director' %}selected{% endif %}>Academic Director</option>
+                                            <option value="College Supervisor" {% if step.role == 'College Supervisor' %}selected{% endif %}>College Supervisor</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="step_order{{ step.id }}">Step Order*</label>
+                                        <input type="number" id="step_order{{ step.id }}" name="step_order" value="{{ step.step_order }}" min="1" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="can_skip{{ step.id }}">Can Skip</label>
+                                        <input type="checkbox" id="can_skip{{ step.id }}" name="can_skip" {% if step.can_skip %}checked{% endif %}>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="is_required{{ step.id }}">Required</label>
+                                        <input type="checkbox" id="is_required{{ step.id }}" name="is_required" {% if step.is_required %}checked{% endif %}>
+                                    </div>
+                                    
+                                    <div class="form-buttons">
+                                        <button type="submit">Update Step</button>
+                                        <button type="button" onclick="toggleStepEditForm('editStepForm{{ step.id }}')">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="flash-message info">No steps defined for this workflow yet.</div>
+        {% endif %}
+        
+        <!-- Add Step Button -->
+        <button class="btn" style="margin: 20px 0 10px 0;" type="button" onclick="toggleStepAddForm()">
+            Add New Step
+        </button>
+        
+        <!-- Add Step Form (initially hidden) -->
+        <div id="addStepForm" style="display:none;">
+            <div class="form-container" style="margin-top: 15px; padding: 15px;">
+                <h3>Add New Step</h3>
+                <form method="POST" action="{{ url_for('admin.add_workflow_step', workflow_id=workflow.id) }}">
+                    <div class="form-group">
+                        <label for="role">Role*</label>
+                        <select id="role" name="role" required>
+                            <option value="">Select a role</option>
+                            <option value="Department Counselor">Department Counselor</option>
+                            <option value="Academic Director">Academic Director</option>
+                            <option value="College Supervisor">College Supervisor</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="step_order">Step Order*</label>
+                        <input type="number" id="step_order" name="step_order" min="1" required
+                               value="{{ steps|length + 1 if steps else 1 }}">
+                        <div style="font-size: 0.8em; color: var(--text-light);">The order in which this approval step occurs in the workflow.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="can_skip">Can Skip</label>
+                        <input type="checkbox" id="can_skip" name="can_skip">
+                        <div style="font-size: 0.8em; color: var(--text-light);">If checked, approvers can skip this step.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="is_required">Required</label>
+                        <input type="checkbox" id="is_required" name="is_required" checked>
+                        <div style="font-size: 0.8em; color: var(--text-light);">If checked, this step must be completed for the workflow to proceed.</div>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit">Add Step</button>
+                        <button type="button" onclick="toggleStepAddForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div style="margin-top: 20px;">
+        <a href="{{ url_for('admin.manage_workflows') }}" class="btn">Back to Workflows</a>
+    </div>
+</div>
+
+<script>
+function toggleStepEditForm(formId) {
+    const form = document.getElementById(formId);
+    if (form.style.display === 'none') {
+        form.style.display = 'table-row';
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+function toggleStepAddForm() {
+    const form = document.getElementById('addStepForm');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+{% endblock %} 

@@ -9,6 +9,8 @@ import os
 import subprocess
 import shutil
 import base64
+import app.services.workflow_service as workflow_service
+from app.models import ApprovalWorkflow, WorkflowStep
 
 
 
@@ -310,5 +312,150 @@ def view_pdf(request_id):
     
     # Return the generated PDF as a response.
     return send_file(pdf_file, mimetype="application/pdf", as_attachment=False)
+
+@admin.route("/admin/workflows")
+@admin_required
+def manage_workflows():
+    """View and manage approval workflows"""
+    workflows = workflow_service.get_all_workflows()
+    return render_template("admin/workflows.html", workflows=workflows)
+
+@admin.route("/admin/workflows/new", methods=["GET", "POST"])
+@admin_required
+def new_workflow():
+    """Create a new workflow"""
+    if request.method == "POST":
+        name = request.form.get("name")
+        description = request.form.get("description")
+        
+        if not name:
+            flash("Workflow name is required", "error")
+            return render_template("admin/workflow_form.html")
+        
+        # Check if a workflow with this name already exists
+        existing_workflow = ApprovalWorkflow.query.filter_by(name=name).first()
+        if existing_workflow:
+            flash(f"A workflow with the name '{name}' already exists", "error")
+            return render_template("admin/workflow_form.html")
+        
+        try:
+            workflow_id = workflow_service.create_workflow(name, description)
+            flash(f"Workflow '{name}' created successfully", "success")
+            return redirect(url_for("admin.edit_workflow", workflow_id=workflow_id))
+        except Exception as e:
+            flash(f"Error creating workflow: {str(e)}", "error")
+            current_app.logger.error(f"Error creating workflow: {e}")
+            return render_template("admin/workflow_form.html")
+    
+    return render_template("admin/workflow_form.html")
+
+@admin.route("/admin/workflows/<int:workflow_id>", methods=["GET", "POST"])
+@admin_required
+def edit_workflow(workflow_id):
+    """Edit a workflow and its steps"""
+    workflow = workflow_service.get_workflow_by_id(workflow_id)
+    steps = workflow_service.get_workflow_steps(workflow_id)
+    
+    if request.method == "POST":
+        name = request.form.get("name")
+        description = request.form.get("description")
+        is_active = request.form.get("is_active") == "on"
+        
+        if not name:
+            flash("Workflow name is required", "error")
+            return render_template("admin/workflow_form.html", workflow=workflow, steps=steps)
+        
+        # Check if a workflow with this name already exists (excluding the current one)
+        existing_workflow = ApprovalWorkflow.query.filter(
+            ApprovalWorkflow.name == name, 
+            ApprovalWorkflow.id != workflow_id
+        ).first()
+        
+        if existing_workflow:
+            flash(f"A workflow with the name '{name}' already exists", "error")
+            return render_template("admin/workflow_form.html", workflow=workflow, steps=steps)
+        
+        try:
+            workflow_service.update_workflow(workflow_id, name, description, is_active)
+            flash(f"Workflow '{name}' updated successfully", "success")
+            return redirect(url_for("admin.manage_workflows"))
+        except Exception as e:
+            flash(f"Error updating workflow: {str(e)}", "error")
+            current_app.logger.error(f"Error updating workflow: {e}")
+            return render_template("admin/workflow_form.html", workflow=workflow, steps=steps)
+    
+    return render_template("admin/workflow_form.html", workflow=workflow, steps=steps)
+
+@admin.route("/admin/workflows/<int:workflow_id>/delete", methods=["POST"])
+@admin_required
+def delete_workflow(workflow_id):
+    """Delete a workflow"""
+    success, message = workflow_service.delete_workflow(workflow_id)
+    
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "error")
+    
+    return redirect(url_for("admin.manage_workflows"))
+
+@admin.route("/admin/workflows/<int:workflow_id>/steps/add", methods=["POST"])
+@admin_required
+def add_workflow_step(workflow_id):
+    """Add a step to a workflow"""
+    role = request.form.get("role")
+    step_order = request.form.get("step_order", type=int)
+    can_skip = request.form.get("can_skip") == "on"
+    is_required = request.form.get("is_required") == "on"
+    
+    if not role or step_order is None:
+        flash("Role and step order are required", "error")
+        return redirect(url_for("admin.edit_workflow", workflow_id=workflow_id))
+    
+    success, message = workflow_service.add_workflow_step(workflow_id, role, step_order, can_skip, is_required)
+    
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "error")
+    
+    return redirect(url_for("admin.edit_workflow", workflow_id=workflow_id))
+
+@admin.route("/admin/workflows/steps/<int:step_id>/update", methods=["POST"])
+@admin_required
+def update_workflow_step(step_id):
+    """Update a workflow step"""
+    step = WorkflowStep.query.get_or_404(step_id)
+    workflow_id = step.workflow_id
+    
+    role = request.form.get("role")
+    step_order = request.form.get("step_order", type=int)
+    can_skip = request.form.get("can_skip") == "on"
+    is_required = request.form.get("is_required") == "on"
+    
+    success, message = workflow_service.update_workflow_step(step_id, role, step_order, can_skip, is_required)
+    
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "error")
+    
+    return redirect(url_for("admin.edit_workflow", workflow_id=workflow_id))
+
+@admin.route("/admin/workflows/steps/<int:step_id>/delete", methods=["POST"])
+@admin_required
+def delete_workflow_step(step_id):
+    """Delete a workflow step"""
+    step = WorkflowStep.query.get_or_404(step_id)
+    workflow_id = step.workflow_id
+    
+    success, message = workflow_service.delete_workflow_step(step_id)
+    
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "error")
+    
+    return redirect(url_for("admin.edit_workflow", workflow_id=workflow_id))
 
 

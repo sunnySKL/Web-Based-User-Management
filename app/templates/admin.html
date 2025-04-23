@@ -16,6 +16,11 @@
 			<button type="button" id="toggle-add-user" class="btn btn-success">Manage Users and Roles</button>
 		</form>
 
+		<!-- manage approval workflows button -->
+		<form action="{{ url_for('admin.manage_workflows') }}" method="GET">
+			<button type="submit" class="btn btn-primary">Manage Approval Workflows</button>
+		</form>
+
 		<!-- review submitted requests button 
 		<form action="{{ url_for('admin.review_requests') }}" method="GET">
 			<button type="submit" class="btn btn-success">Review Submitted Requests</button>

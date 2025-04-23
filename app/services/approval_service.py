@@ -2,8 +2,9 @@ from flask import session
 from app.models import AcademicRequests, ApprovalLog, User
 from app.extensions.db import db
 from datetime import datetime
+import app.services.workflow_service as workflow_service
 
-# Approval hierarchy constants
+# Approval hierarchy constants - kept for backward compatibility
 APPROVAL_SEQUENCE = [
     "department_counselor",
     "academic_director",
@@ -64,15 +65,16 @@ def approve_request(request_id, approver_email, approver_role, comments=None):
         )
         db.session.add(approval_log)
         
-        # Get current position in approval sequence
-        current_index = APPROVAL_SEQUENCE.index(approver_stage)
+        # Get the next approver role from the workflow service
+        next_approver_internal = get_next_approver(approver_stage)
         
-        # If this is the last approver in the sequence
-        if current_index == len(APPROVAL_SEQUENCE) - 1:
+        # If there is no next approver, mark as fully approved
+        if next_approver_internal is None:
             request.status = STATUS_APPROVED
+            request.current_approver = None
         else:
-            # Move to next approver in sequence
-            request.current_approver = APPROVAL_SEQUENCE[current_index + 1]
+            # Move to next approver
+            request.current_approver = next_approver_internal
         
         db.session.commit()
         return True, "Request approved successfully"
@@ -82,15 +84,16 @@ def approve_request(request_id, approver_email, approver_role, comments=None):
         
         # Even if we can't create an approval log, still update the request status
         try:
-            # Get current position in approval sequence
-            current_index = APPROVAL_SEQUENCE.index(approver_stage)
+            # Get the next approver role from the workflow service
+            next_approver_internal = get_next_approver(approver_stage)
             
-            # If this is the last approver in the sequence
-            if current_index == len(APPROVAL_SEQUENCE) - 1:
+            # If there is no next approver, mark as fully approved
+            if next_approver_internal is None:
                 request.status = STATUS_APPROVED
+                request.current_approver = None
             else:
-                # Move to next approver in sequence
-                request.current_approver = APPROVAL_SEQUENCE[current_index + 1]
+                # Move to next approver
+                request.current_approver = next_approver_internal
             
             db.session.commit()
             return True, "Request approved successfully"
@@ -98,6 +101,45 @@ def approve_request(request_id, approver_email, approver_role, comments=None):
             db.session.rollback()
             print(f"Error updating request status: {inner_e}")
             return False, f"Error processing approval: {str(e)}"
+
+def get_next_approver(current_approver):
+    """
+    Get the next approver role in the workflow.
+    Uses the workflow service but maps between internal role identifiers
+    and UI role names.
+    """
+    # Map from internal role identifiers to UI role names
+    reverse_role_mapping = {
+        "department_counselor": User.ROLE_DEPARTMENT_COUNSELOR,
+        "academic_director": User.ROLE_ACADEMIC_DIRECTOR,
+        "college_supervisor": User.ROLE_COLLEGE_SUPERVISOR
+    }
+    
+    # Get the UI role name for the current approver
+    current_role_name = reverse_role_mapping.get(current_approver)
+    if not current_role_name:
+        # Fallback to hardcoded sequence if mapping fails
+        try:
+            current_index = APPROVAL_SEQUENCE.index(current_approver)
+            if current_index < len(APPROVAL_SEQUENCE) - 1:
+                return APPROVAL_SEQUENCE[current_index + 1]
+            return None
+        except ValueError:
+            return None
+    
+    # Get the next role name from the workflow service
+    next_role_name = workflow_service.get_next_approver_role(current_role_name)
+    if not next_role_name:
+        return None
+    
+    # Map back to internal role identifier
+    role_mapping = {
+        User.ROLE_DEPARTMENT_COUNSELOR: "department_counselor",
+        User.ROLE_ACADEMIC_DIRECTOR: "academic_director", 
+        User.ROLE_COLLEGE_SUPERVISOR: "college_supervisor"
+    }
+    
+    return role_mapping.get(next_role_name)
 
 def reject_request(request_id, approver_email, approver_role, comments=None):
     """Reject a request"""
