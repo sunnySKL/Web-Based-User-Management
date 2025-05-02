@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Manage Approval Workflows{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    <h1>Manage Approval Workflows</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+                {{ message }}
+                <button onclick="dismissFlashMessage(this.parentElement);">×</button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Approval Workflows</h2>
+        <a href="{{ url_for('admin.new_workflow') }}" class="btn">Create New Workflow</a>
+    </div>
+    
+    {% if workflows %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for workflow in workflows %}
+                <tr>
+                    <td>{{ workflow.id }}</td>
+                    <td>{{ workflow.name }}</td>
+                    <td>{{ workflow.description }}</td>
+                    <td>
+                        {% if workflow.is_active %}
+                        <span class="status approved">Active</span>
+                        {% else %}
+                        <span class="status draft">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ workflow.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.edit_workflow', workflow_id=workflow.id) }}" class="btn">Edit</a>
+                        {% if workflow.name != "Default Approval Workflow" %}
+                        <form method="POST" action="{{ url_for('admin.delete_workflow', workflow_id=workflow.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this workflow?')">Delete</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="flash-message info">
+        No workflows found. Click "Create New Workflow" to create one.
+    </div>
+    {% endif %}
+    
+    <div style="margin-top: 20px;">
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn">Back to Admin Dashboard</a>
+    </div>
+</div>
+{% endblock %} 

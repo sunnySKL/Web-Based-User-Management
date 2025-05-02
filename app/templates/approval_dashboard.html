@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ user_role }} Approval Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    <h2>Welcome, {{ session['user'] }}!</h2>
+    <p><strong>Email:</strong> {{ session['email'] }}</p>
+    <p><strong>Role:</strong> {{ session['role'] }}</p>
+    
+    <h2>{{ user_role }} Approval Dashboard</h2>
+    
+    <div class="role-info">
+        <p>As a <strong>{{ user_role }}</strong>, you are responsible for reviewing and approving forms in the approval workflow.</p>
+        
+        {% if user_role == "Department Counselor" %}
+        <p>You are the <strong>first</strong> approver in the approval process. Once you approve a form, it will be sent to the Academic Director.</p>
+        {% elif user_role == "Academic Director" %}
+        <p>You are the <strong>second</strong> approver in the approval process. Forms come to you after being approved by the Department Counselor. 
+           Once you approve a form, it will be sent to the College Supervisor.</p>
+        {% elif user_role == "College Supervisor" %}
+        <p>You are the <strong>final</strong> approver in the approval process. Forms come to you after being approved by both the Department Counselor 
+           and Academic Director. Your approval finalizes the form submission.</p>
+        {% endif %}
+    </div>
+    
+    <h3>Pending Requests</h3>
+    {% if pending_requests %}
+        <div class="table-container">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Form Type</th>
+                        <th>Submitted By</th>
+                        <th>Submitted On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in pending_requests %}
+                    <tr>
+                        <td>{{ req.id }}</td>
+                        <td>
+                            {% if req.form_type|string == "1" %}
+                            Special Circumstance
+                            {% elif req.form_type|string == "2" %}
+                            Instructor Drop Form
+                            {% elif req.form_type|string == "3" %}
+                            Affidavit of Intent
+                            {% elif req.form_type|string == "4" %}
+                            Tuition Exemption
+                            {% else %}
+                            Unknown Form
+                            {% endif %}
+                        </td>
+                        <td>{{ req.email }}</td>
+                        <td>{{ (req.created_at.replace(hour=req.created_at.hour-5) if req.created_at.hour >= 5 else req.created_at.replace(day=req.created_at.day-1, hour=req.created_at.hour+19)).strftime("%m-%d-%Y %H:%M") if req.created_at else "N/A" }}</td>
+                        <td>
+                            <form action="{{ url_for('approval.view_request', request_id=req.id) }}" method="GET" style="display:inline;">
+                                <button type="submit" class="btn btn-primary">View Details</button>
+                            </form>
+                            <form action="{{ url_for('approval.view_pdf', request_id=req.id) }}" method="GET" style="display:inline;">
+                                <button type="submit" class="btn btn-secondary">View PDF</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No pending requests requiring your approval.</p>
+    {% endif %}
+</div>
+{% endblock %} 

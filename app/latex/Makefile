@@ -1,5 +1,5 @@
 # List all the .tex files to compile.
-TEXFILES = course_drop.tex special_circumstance.tex
+TEXFILES = course_drop.tex special_circumstance.tex affidavit_intent.tex tuition_exemption.tex
 
 # Automatically derive the PDF file names from the TEX files.
 PDFFILES = $(TEXFILES:.tex=.pdf)

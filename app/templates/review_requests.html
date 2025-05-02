@@ -19,7 +19,19 @@
 			<tr>
 				<td>{{ req.id }}</td>
 				<td>{{ req.email }}</td>
-				<td>{{ "Special Circumstance" if req.form_type|string == "1" else "Instructor Drop" }}</td>
+				<td>
+					{% if req.form_type|string == "1" %}
+					Special Circumstance
+					{% elif req.form_type|string == "2" %}
+					Instructor Drop
+					{% elif req.form_type|string == "3" %}
+					Affidavit of Intent
+					{% elif req.form_type|string == "4" %}
+					Tuition Exemption
+					{% else %}
+					Unknown Form
+					{% endif %}
+				</td>
 				<td>
 					{% if req.status == 'approved' %}
 					<span style="color: green; font-weight: bold;">Approved</span>

@@ -1,30 +1,67 @@
 \documentclass{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
-\usepackage{longtable}
-\usepackage{hyperref}
+\usepackage{color}
+
+% Simple color definition
+\definecolor{uhred}{RGB}{200, 16, 46}
 
 \begin{document}
-\title{Instructor Initiated Drop Form}
-\author{ {{ request_data.student_name }} }
-\date{{ request_data.created_at.strftime("%Y-%m-%d") if request_data.created_at else "" }}
-\maketitle
 
-\section*{Special Request Details}
-\begin{tabular}{ll}
+% Simple title
+\begin{center}
+\color{uhred}
+\rule{\linewidth}{1pt}
+\vspace{4mm}
+{\Large \textbf{UNIVERSITY OF HOUSTON}}\\
+\vspace{2mm}
+{\large Instructor-Initiated Drop Form}\\
+\vspace{2mm}
+\rule{\linewidth}{1pt}
+\end{center}
+
+\vspace{0.5cm}
+
+\section*{Student Information}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
 \textbf{Student ID:} & {{ request_data.student_id }} \\
-\textbf{Semester:} & {{ request_data.semester }} \\
-\textbf{Year:} & {{ request_data.year }} \\
-\textbf{Subject:} & {{ request_data.subject }} \\
-\textbf{Catalog Number:} & {{ request_data.catalog_number }} \\
-\textbf{Class Number:} & {{ request_data.class_number }} \\
+\hline
 \end{tabular}
 
-\section*{Signature}
-{% if request_data.signature_filename %}
-\includegraphics[width=0.5\textwidth]{uploads/{ request_data.signature_filename }}
+\vspace{0.5cm}
+
+\section*{Course Information}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Semester:} & {{ request_data.semester }} \\
+\hline
+\textbf{Year:} & {{ request_data.year }} \\
+\hline
+\textbf{Subject:} & {{ request_data.subject }} \\
+\hline
+\textbf{Catalog Number:} & {{ request_data.catalog_number }} \\
+\hline
+\textbf{Class Number:} & {{ request_data.class_number }} \\
+\hline
+\end{tabular}
+
+\vspace{0.5cm}
+
+\section*{Instructor Signature}
+\begin{center}
+{% if request_data.signature_image_filename %}
+\includegraphics[width=0.4\textwidth]{ {{ request_data.signature_image_filename }} }
 {% else %}
 No signature provided.
 {% endif %}
+\end{center}
+
+\vspace{1cm}
+
+\begin{center}
+\footnotesize
+This document contains confidential information and is for official university use only.
+\end{center}
 
 \end{document}

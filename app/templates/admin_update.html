@@ -20,6 +20,9 @@
             <select id="role" name="role" required>
                 <option value="User" {% if user.role == "User" %}selected{% endif %}>User</option>
                 <option value="Admin" {% if user.role == "Admin" %}selected{% endif %}>Admin</option>
+                <option value="Department Counselor" {% if user.role == "Department Counselor" %}selected{% endif %}>Department Counselor</option>
+                <option value="Academic Director" {% if user.role == "Academic Director" %}selected{% endif %}>Academic Director</option>
+                <option value="College Supervisor" {% if user.role == "College Supervisor" %}selected{% endif %}>College Supervisor</option>
             </select>
         </div>
 

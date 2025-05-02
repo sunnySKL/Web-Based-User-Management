@@ -11,20 +11,22 @@
 	<p>Manage users/roles and review requests below.</p>
 	
 	<div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 20px;">
-		<!-- Add User Button -->
+		<!-- add user button -->
 		<form>
 			<button type="button" id="toggle-add-user" class="btn btn-success">Manage Users and Roles</button>
 		</form>
 
-		<!-- Review Submitted Requests Button -->
+		<!-- manage approval workflows button -->
+		<form action="{{ url_for('admin.manage_workflows') }}" method="GET">
+			<button type="submit" class="btn btn-primary">Manage Approval Workflows</button>
+		</form>
+
+		<!-- review submitted requests button 
 		<form action="{{ url_for('admin.review_requests') }}" method="GET">
 			<button type="submit" class="btn btn-success">Review Submitted Requests</button>
-		</form>
+		</form> -->
 	</div>
 	
-	
-	
-
 	<!-- Hidden Add User Form -->
 	<div id="add-user-form" style="display: none; margin-top: 20px;">
 		<h3>Add New User</h3>
@@ -42,6 +44,9 @@
 				<select id="role" name="role" required>
 					<option value="User">User</option>
 					<option value="Admin">Admin</option>
+					<option value="Department Counselor">Department Counselor</option>
+					<option value="Academic Director">Academic Director</option>
+					<option value="College Supervisor">College Supervisor</option>
 				</select>
 			</div>
 			<div>

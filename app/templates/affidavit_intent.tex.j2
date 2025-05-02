@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{color}
+
+% Simple color definition
+\definecolor{uhred}{RGB}{200, 16, 46}
+
+\begin{document}
+
+\begin{center}
+{\large \textbf{AFFIDAVIT}}
+\end{center}
+
+\begin{tabular}{ll}
+STATE OF TEXAS & § \\
+                & § \\
+COUNTY OF {% if request_data.county %}{{ request_data.county }}{% else %}\rule{2in}{0.4pt}{% endif %} & § \\
+\end{tabular}
+
+\vspace{1cm}
+
+Before me, the undersigned Notary Public, on this day personally appeared {{ request_data.student_name }},
+
+\vspace{0.3cm}
+
+known to me, who being by me duly sworn upon his/her oath, deposed and said:
+
+\begin{enumerate}
+\item My name is {{ request_data.student_name }}.\\
+I am {{ request_data.age }} years of age and have personal knowledge of the facts stated herein and they are all true and correct.
+
+\item I graduated or will graduate from a Texas high school or received my GED certificate in Texas.
+
+\item I resided in Texas for three years leading up to graduation from high school or receiving my GED certificate.
+
+\item I have resided or will have resided in Texas for the 12 months prior the census date of the semester in which I will enroll in {{ request_data.college }}.\\
+(name of college)
+
+\item I have filed or will file an application to become a permanent resident at the earliest opportunity that I am eligible to do so.
+\end{enumerate}
+
+\vspace{0.5cm}
+
+{% if request_data.signature_date %}
+{% set date_parts = request_data.signature_date.split('-') %}
+{% if date_parts|length >= 3 %}
+In witness whereof, this {{ date_parts[2]|int }}day of 
+{% if date_parts[1] == '01' %}January{% elif date_parts[1] == '02' %}February{% elif date_parts[1] == '03' %}March
+{% elif date_parts[1] == '04' %}April{% elif date_parts[1] == '05' %}May{% elif date_parts[1] == '06' %}June
+{% elif date_parts[1] == '07' %}July{% elif date_parts[1] == '08' %}August{% elif date_parts[1] == '09' %}September
+{% elif date_parts[1] == '10' %}October{% elif date_parts[1] == '11' %}November{% elif date_parts[1] == '12' %}December{% endif %}, {{ date_parts[0] }}.
+{% else %}
+In witness whereof, this \rule{1in}{0.4pt}day of \rule{2in}{0.4pt}, \rule{1in}{0.4pt}.
+{% endif %}
+{% else %}
+In witness whereof, this \rule{1in}{0.4pt}day of \rule{2in}{0.4pt}, \rule{1in}{0.4pt}.
+{% endif %}
+
+\vspace{1cm}
+
+\begin{center}
+{% if request_data.signature %}
+\includegraphics[width=0.4\textwidth]{ {{ request_data.signature_image_filename }} }
+{% else %}
+\rule{4in}{0.4pt}
+{% endif %}\\
+(Signature)
+
+\vspace{0.5cm}
+
+{{ request_data.student_name }}\\
+(Printed Name)
+
+\vspace{0.5cm}
+
+{{ request_data.student_id }}\\
+(Student I.D.\#)
+
+\vspace{0.5cm}
+
+{% if request_data.date_of_birth %}
+{% set dob_parts = request_data.date_of_birth.split('-') %}
+{% if dob_parts|length >= 3 %}
+{{ dob_parts[1] }}-{{ dob_parts[2] }}-{{ dob_parts[0] }}\\
+{% else %}
+{{ request_data.date_of_birth }}\\
+{% endif %}
+{% else %}
+\rule{4in}{0.4pt}\\
+{% endif %}
+(Student Date of Birth)
+\end{center}
+
+\vspace{1cm}
+
+\textbf{SUBCRIBED TO AND SWORN TO BEFORE ME}, on the 
+{% if request_data.signature_date %}
+{% set date_parts = request_data.signature_date.split('-') %}
+{% if date_parts|length >= 3 %}
+{{ date_parts[2]|int }} day of
+{% if date_parts[1] == '01' %}January{% elif date_parts[1] == '02' %}February{% elif date_parts[1] == '03' %}March
+{% elif date_parts[1] == '04' %}April{% elif date_parts[1] == '05' %}May{% elif date_parts[1] == '06' %}June
+{% elif date_parts[1] == '07' %}July{% elif date_parts[1] == '08' %}August{% elif date_parts[1] == '09' %}September
+{% elif date_parts[1] == '10' %}October{% elif date_parts[1] == '11' %}November{% elif date_parts[1] == '12' %}December{% endif %}, {{ date_parts[0] }}
+{% else %}
+\rule{2in}{0.4pt} day of
+{% endif %}
+{% else %}
+\rule{2in}{0.4pt} day of
+{% endif %}
+
+\vspace{0.3cm}
+
+\rule{3in}{0.4pt}, \rule{2in}{0.4pt}, to
+
+\vspace{0.3cm}
+
+certify which witness my hand and official seal.
+
+\vspace{1cm}
+
+\begin{center}
+\rule{4in}{0.4pt}\\
+Notary Public in and for the State of Texas
+\end{center}
+
+\end{document} 

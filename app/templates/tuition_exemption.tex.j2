@@ -1,0 +1,146 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{color}
+
+% Simple color definition
+\definecolor{uhred}{RGB}{200, 16, 46}
+
+\begin{document}
+
+% Simple title
+\begin{center}
+\color{uhred}
+\rule{\linewidth}{1pt}
+\vspace{4mm}
+{\Large \textbf{UNIVERSITY OF HOUSTON}}\\
+\vspace{2mm}
+{\large Authorization to Release Educational Records}\\
+\vspace{1mm}
+{\footnotesize Form No. OGC-SF-2006-02}\\
+\vspace{2mm}
+\rule{\linewidth}{1pt}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{center}
+{\large \textbf{AUTHORIZATION TO RELEASE EDUCATIONAL RECORDS}}\\
+{\large Family Educational Rights and Privacy Act of 1974 as Amended (FERPA)}
+\end{center}
+
+\vspace{0.5cm}
+
+I {{ request_data.student_name }} hereby voluntarily authorize officials in the University of Houston department(s) identified below to disclose personally identifiable information from my educational records. (Please check the box or boxes that apply):
+
+\begin{tabular}{p{15cm}}
+\textbf{Department/Office:} {{ request_data.department }}\\
+\end{tabular}
+
+\vspace{0.5cm}
+
+Specifically, I authorize disclosure of the following information or category of information. (Please check the box or boxes that apply):
+
+\begin{tabular}{p{15cm}}
+\textbf{Information to Disclose:} {{ request_data.disclosure_type }}\\
+\end{tabular}
+
+\vspace{0.5cm}
+
+This information may be released to:
+
+\begin{tabular}{p{15cm}}
+\textbf{Release Information To:} {{ request_data.recipient_type }}\\
+\end{tabular}
+
+\vspace{0.3cm}
+
+for the purpose of informing:
+
+\begin{tabular}{p{15cm}}
+\textbf{Reason:} {{ request_data.exemption_reason }}\\
+\end{tabular}
+
+\vspace{0.5cm}
+
+\section*{Student Information}
+\begin{tabular}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Student ID:} & {{ request_data.student_id }} \\
+\hline
+\textbf{Student Name:} & {{ request_data.student_name }} \\
+\hline
+\textbf{Email:} & {{ request_data.email }} \\
+\hline
+\textbf{Phone:} & {{ request_data.phone }} \\
+\hline
+\textbf{Semester:} & {{ request_data.semester }} \\
+\hline
+\end{tabular}
+
+\vspace{0.5cm}
+
+\section*{Exemption Type}
+\begin{tabular}{|p{15cm}|}
+\hline
+\textbf{Requested Exemption:} {{ request_data.exemption_type }} \\
+\hline
+\end{tabular}
+
+\vspace{0.5cm}
+
+\section*{Student Certification}
+\begin{tabular}{|p{15cm}|}
+\hline
+This is to attest that I am the student signing this form. I understand the information may be released orally or in the form of copies of written records, as preferred by the requester. This authorization will remain in effect from the date it is executed until revoked by me, in writing, and delivered to Department(s) identified above. \\
+\hline
+\end{tabular}
+
+\vspace{0.5cm}
+
+\begin{tabular}{p{7cm}p{7cm}}
+{{ request_data.student_name }} & {{ request_data.student_id }} \\
+\rule{7cm}{0.4pt} & \rule{7cm}{0.4pt} \\
+Student Name (please print) & PeopleSoft I.D. Number \\
+\\
+{% if request_data.signature %}
+\includegraphics[width=0.3\textwidth]{ {{ request_data.signature_image_filename }} } & 
+{% if request_data.signature_date %}
+{% set date_parts = request_data.signature_date.split('-') %}
+{% if date_parts|length >= 3 %}
+{{ date_parts[1] }}-{{ date_parts[2] }}-{{ date_parts[0] }} \\
+{% else %}
+{{ request_data.signature_date }} \\
+{% endif %}
+{% else %}
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ \\
+{% endif %}
+{% else %}
+\rule{7cm}{0.4pt} & 
+{% if request_data.signature_date %}
+{% set date_parts = request_data.signature_date.split('-') %}
+{% if date_parts|length >= 3 %}
+{{ date_parts[1] }}-{{ date_parts[2] }}-{{ date_parts[0] }} \\
+{% else %}
+{{ request_data.signature_date }} \\
+{% endif %}
+{% else %}
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ \\
+{% endif %}
+{% endif %}
+\rule{7cm}{0.4pt} & \rule{7cm}{0.4pt} \\
+Student Signature & Date \\
+\end{tabular}
+
+\vspace{1cm}
+
+\begin{center}
+\footnotesize
+Office of the General Counsel\\
+FERPA Authorization Form\\
+OGC-SF-2006-02 Revised 03.10.08\\
+Page 1 of 1\\
+\emph{Note: Modification of this Form requires approval of OGC}
+\end{center}
+
+\end{document} 

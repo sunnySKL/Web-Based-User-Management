@@ -13,6 +13,8 @@
 			<option value="" disabled selected>Select a form</option>
 			<option value="1">Special Circumstance Form</option>
 			<option value="2">Instructor-Initiated Drop Form</option>
+			<option value="3">Affidavit of Intent to Become a Permanent Resident</option>
+			<option value="4">Tuition Exemption Request Form</option>
 		</select>
 		<button type="submit" class="btn btn-primary">Submit Request</button>
 	</form>
@@ -26,6 +28,7 @@
 					<th>ID</th>
 					<th>Form Type</th>
 					<th>Status</th>
+					<th>Current Approver</th>
 					<th>Submitted On</th>
 					<th>Actions</th>
 				</tr>
@@ -39,6 +42,10 @@
 						Special Circumstance
 						{% elif req.form_type|string == "2" %}
 						Instructor Drop Form
+						{% elif req.form_type|string == "3" %}
+						Affidavit of Intent
+						{% elif req.form_type|string == "4" %}
+						Tuition Exemption
 						{% else %}
 						Unknown Form
 						{% endif %}
@@ -48,7 +55,27 @@
 						{{ req.status.replace('_', ' ').title() }}
 					</td>
 
-					<td>{{ req.created_at.strftime("%Y-%m-%d %H:%M") if req.created_at else "N/A" }}</td>
+					<td>
+						{% if req.status == "under_review" %}
+							{% if req.current_approver == "department_counselor" %}
+								Department Counselor
+							{% elif req.current_approver == "academic_director" %}
+								Academic Director
+							{% elif req.current_approver == "college_supervisor" %}
+								College Supervisor
+							{% else %}
+								Unknown
+							{% endif %}
+						{% elif req.status == "approved" %}
+							All Approvers
+						{% elif req.status == "rejected" %}
+							See Request Details
+						{% else %}
+							N/A
+						{% endif %}
+					</td>
+
+					<td>{{ (req.created_at.replace(hour=req.created_at.hour-5) if req.created_at.hour >= 5 else req.created_at.replace(day=req.created_at.day-1, hour=req.created_at.hour+19)).strftime("%m-%d-%Y %H:%M") if req.created_at else "N/A" }}</td>
 					<td>
 						{% if req.status.lower() == "draft" %}
 						{% if req.form_type|string == "1" %}
@@ -61,6 +88,16 @@
 							<button type="submit" class="btn btn-secondary btn-sm">Update</button>
 						</form>
 
+						{% elif req.form_type|string == "3" %}
+						<form action="{{ url_for('dashboard.affidavit_intent_edit', request_id=req.id) }}" method="GET" style="display:inline;">
+							<button type="submit" class="btn btn-secondary btn-sm">Update</button>
+						</form>
+
+						{% elif req.form_type|string == "4" %}
+						<form action="{{ url_for('dashboard.tuition_exemption_edit', request_id=req.id) }}" method="GET" style="display:inline;">
+							<button type="submit" class="btn btn-secondary btn-sm">Update</button>
+						</form>
+
 						{% endif %}
 						{% endif %}
 						<form action="{{ url_for('dashboard.delete_form', request_id=req.id) }}" method="POST" style="display:inline;">
@@ -69,7 +106,9 @@
 						<form action="{{ url_for('dashboard.view_pdf', request_id=req.id) }}" method="GET" style="display:inline;">
 							<button type="submit" class="btn btn-secondary btn-sm">View PDF</button>
 						</form>
-
+						<form action="{{ url_for('approval.view_request', request_id=req.id) }}" method="GET" style="display:inline;">
+							<button type="submit" class="btn btn-info btn-sm">Details</button>
+						</form>
 					</td>
 				</tr>
 				{% endfor %}

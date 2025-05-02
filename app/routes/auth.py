@@ -15,10 +15,16 @@ AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/authoriz
 TOKEN_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
 SCOPE = ["User.Read"]
 
-@auth.route("/login")
+@auth.route("/login", methods = ["GET", "POST"])
 def microsoft_login():
     if "user" in session:
-        return redirect(url_for("admin.admin_dashboard"))
+        role = session.get("role")
+        if role == User.ROLE_ADMIN:
+            return redirect(url_for("admin.admin_dashboard"))
+        elif role in [User.ROLE_DEPARTMENT_COUNSELOR, User.ROLE_ACADEMIC_DIRECTOR, User.ROLE_COLLEGE_SUPERVISOR]:
+            return redirect(url_for("approval.approval_dashboard"))
+        else:
+            return redirect(url_for("dashboard.user_dashboard"))
 
     redirect_uri = url_for('auth.microsoft_callback', _external=True)
     login_url = (
@@ -27,6 +33,48 @@ def microsoft_login():
         f"&scope={' '.join(SCOPE)}"
     )
     return redirect(login_url)
+
+
+@auth.route('/complete-profile', methods=['GET', 'POST'])
+def complete_profile():
+    user_id = session.get("user_id")
+    user = User.query.filter_by(email=session["email"].lower()).first()
+
+    # POST will come from our JS-prompt form
+    if request.method == 'POST':
+        entered = request.form.get('uh_id', '').strip()
+        # 1) they clicked “Cancel” or left blank?
+        if not entered:
+            return redirect(url_for('auth.logout'))
+
+        # 2) if they already had uh_id in DB, verify it
+        if user.uh_id:
+            if str(user.uh_id) != entered:
+                flash("UH ID mismatch – logging you out.", "error")
+                return redirect(url_for('auth.logout'))
+        else:
+            # first-time: assign it
+            user.uh_id = int(entered)
+            db.session.commit()
+        
+
+        # success!
+        session["role"] = user.role
+        session["uh_id"] = user.uh_id
+        session["exists"] = True
+        session["active"] = True
+    
+        # Redirect based on role
+        if user.role == User.ROLE_ADMIN:
+            return redirect(url_for('admin.admin_dashboard'))
+        elif user.role in [User.ROLE_DEPARTMENT_COUNSELOR, User.ROLE_ACADEMIC_DIRECTOR, User.ROLE_COLLEGE_SUPERVISOR]:
+            return redirect(url_for('approval.approval_dashboard'))
+        else:
+            return redirect(url_for('dashboard.user_dashboard'))
+
+    # GET just renders our “hidden” prompt page
+    return render_template('complete_profile.html')
+
 
 
 @auth.route('/auth/callback')
@@ -50,13 +98,20 @@ def microsoft_callback():
         session["active"] = False
         return redirect(url_for("main.home"))
 
-    flash(f"Welcome, {session['user']}!", "success")
+    flash("We need your UH ID to finish logging you in.", "warning")
+    return redirect(url_for('auth.complete_profile'))
 
-    if user.role.lower() == "admin":
-        session["role"] = "Admin"
+    flash(f"Welcome, {session['user']}!", "success")
+    
+    # Set the session role to the actual user role from the database
+    session["role"] = user.role
+    
+    # Redirect based on role
+    if user.role == User.ROLE_ADMIN:
         return redirect(url_for('admin.admin_dashboard'))
+    elif user.role in [User.ROLE_DEPARTMENT_COUNSELOR, User.ROLE_ACADEMIC_DIRECTOR, User.ROLE_COLLEGE_SUPERVISOR]:
+        return redirect(url_for('approval.approval_dashboard'))
     else:
-        session["role"] = "User"
         return redirect(url_for('dashboard.user_dashboard'))
 
 
@@ -74,6 +129,7 @@ def register():
     if request.method == "POST":
         display_name = request.form.get("display_name")
         email = request.form.get("email")
+        uh_id = request.form.get("uhid")
 
         if not email.endswith("@cougarnet.uh.edu"):
             flash("Only UH emails are allowed.", "error")
@@ -85,7 +141,7 @@ def register():
             flash("An account with that email already exists.", "error")
             return render_template("register.html")
 
-        new_user = User(display_name=display_name, email=email.lower(), role="User", status="active")
+        new_user = User(user_id = uh_id,display_name=display_name, email=email.lower(), role=User.ROLE_USER, status="active")
         db.session.add(new_user)
         db.session.commit()
         flash("Account created successfully! You can now log in.", "success")

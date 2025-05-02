@@ -5,7 +5,7 @@
 # Project Overview
 The first iteration of the group project aims to provide you with hands-on experience in building a web-based user management system that leverages Office365 for authentication.
 
-# Setup and running locally
+# Local Setup (without Docker)
 After creating your virtual envirmoment, you can install the dependicies using
 ```bash
 pip3 install -r requirements.txt
@@ -44,6 +44,30 @@ python3 run.py
 ```
 
 
+
+
+
+# Docker Setup 
+This method will automatically configure both the app and the PostgreSQL database using docker-compose.
+
+# Create .env file (same as above)
+
+# Run the app with Docker 
+From the root project directory:
+```bash
+docker-compose up --build
+```
+
+The app will be available at http://localhost:7070 (you can change depending on your available ports)
+
+# Access the database 
+To connect to the database container:
+
+```bash
+docker compose exec db psql -U flaskuser -d flaskdb
+```
+
 # Config
 Default and global config is located under `root/config.py`.
+
 

@@ -9,7 +9,7 @@
         <!-- Student Information -->
 		<div>
 			<label for="student_name">Student Name:</label>
-			<!-- If the name is already in session, you can fill it in and mark read-only -->
+			<!-- if student in session -->
 			<input type="text" id="student_name" name="student_name" value="{{ session['user'] }}" required>
 		</div>
         <div>
@@ -46,13 +46,13 @@
             <input type="text" id="class_number" name="class_number" placeholder="e.g., 12345" required>
         </div>
 
-        <!-- Instructor Signature Upload -->
+        <!-- instructor/student sig -->
         <div>
             <label for="signature">Instructor Signature (Upload an image file):</label>
             <input type="file" id="signature" name="signature" accept="image/*" required>
         </div>
 
-        <!-- Submission Date (Auto-filled) -->
+        <!-- Submission Date AUTO -->
         <div>
             <label for="date">Submission Date:</label>
             <input type="text" id="date" name="date" value="{{ current_date }}" readonly>
